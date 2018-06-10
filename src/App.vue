@@ -108,7 +108,7 @@ export default {
       // get the total number of hours to be reported now
       let rh = 0;
       for(let i=0; i<this.issues.length; i++) {
-        rh += parseFloat(this.issues[i].time_reported);
+        rh += parseFloat(this.issues[i].report_hours);
       }
       return rh;
     }
@@ -132,7 +132,7 @@ export default {
       // - project_namespace
       // - project_name (actually, it is the "project name" part of the URL. You'll only notice differentes if the name has special characters
       // - project_url : the URL to the project
-      // - time_reported: time to report next time the user clicks on 'report'
+      // - report_hours: time to report next time the user clicks on 'report'
 
       /* note: scope can be:
       - created_by_me (created-by-me if version<11) This is the default value
@@ -155,7 +155,7 @@ export default {
           issue.project_url = GITLAB + '/' + issue.project_namespace
 
           // timereported
-          issue.time_reported = 0
+          issue.report_hours = 0
 
           // create calendar events
           if(issue.due_date) {
@@ -190,14 +190,20 @@ export default {
       /** report hours */
       for(let i=0; i<this.issues.length; i++) {
         let issue = this.issues[i]
-        let hoursToReport = parseFloat(issue.time_reported)
+        let hoursToReport = parseFloat(issue.report_hours)
+        let commentToReport = issue.report_comment
         if(!isNaN(hoursToReport) && hoursToReport > 0) {
-          let spendTxt = '/spend ' + hoursToReport + 'h ' + date
+          let spendTxt='/spend ' + hoursToReport + 'h ' + date;
+          if(commentToReport) {
+            spendTxt = spendTxt + '\n' + commentToReport
+          }
           let reportURL = '/api/v4/projects/' + issue.project_id+ '/issues/' + issue.iid + '/notes'
+          console.log(spendTxt)
           this.$http.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}})
           // Since we are reporting, we are not really creating a real note. The previous request will return 404 always
         }
-        issue.time_reported = 0;
+        issue.report_hours = 0;
+        issue.report_comment = '';
       }
     },
 
@@ -218,5 +224,7 @@ export default {
 </script>
 
 <style>
-
+.pointable{
+    cursor: pointer;
+}
 </style>

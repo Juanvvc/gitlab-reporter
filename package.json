@@ -7,7 +7,8 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot",
-    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
+    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
+    "publish": "scp dist/build.js portal.incide.es:/var/www/html/gitlab-reporter/dist/."
   },
   "dependencies": {
     "basil.js": "^0.4.9",
