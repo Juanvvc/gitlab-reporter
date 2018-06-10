@@ -1,6 +1,10 @@
 # Gitlab-reporter
 
-> A Vue.js project
+An interface for Gitlab:
+
+- Easily report hours
+- Show a calendar with open issues and their milestones
+
 
 ## Build Setup
 
