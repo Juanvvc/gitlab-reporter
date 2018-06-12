@@ -4,7 +4,7 @@
   <v-app>
     <v-content>
       <v-container>
-        <h1>Task viewer and reporter</h1>
+        <h1>Task viewer and reporter for {{ user.name }}</h1>
 
         <v-tabs
           v-model="activeTab"
@@ -15,11 +15,13 @@
           <v-tab href="#tab-calendar"><v-icon>calendar_today</v-icon> Calendar</v-tab>
           <v-tab href="#tab-config"><v-icon>settings</v-icon> Settings</v-tab>
 
-          <!-- reporter -->
+            <!-- reporter -->
             <v-tab-item id="tab-reporter">
               <v-card flat>
                 <v-card-text>
-                  <h2>Open issues assigned to me</h2>
+                  <h2>Pending Todos</h2>
+                  
+                  <p>This list includes issues assigned to you and issues where you are mentioned.</p>
 
                   <p>Number of tasks: {{ issues.length }}</p>
 
@@ -100,7 +102,8 @@ export default {
       activeTab: null,          // identifier of the currently selected tab
       privateToken: null,       // user private token in gitlab
       calendarEvents: [],       // an array of calendar events, as vue-simple-calendar needs
-      calendarDate: new Date()  // the current date in the calendar
+      calendarDate: new Date(), // the current date in the calendar
+      user: {name: 'NOT_LOGGED'}// the user currently logged on
     }
   },
 
@@ -122,30 +125,38 @@ export default {
       this.activeTab = 'tab-config'
     } else {
       this.getIssues()
+      this.getUser()
       this.activeTab = 'tab-reporter'
     }
   },
 
   methods: {
+    getUser () {
+      this.$http.get(GITLAB + '/api/v4/user', {headers: {'Private-Token': this.privateToken}}).then( response => {
+          this.user = response.body
+      })
+    },
+
     getIssues () {
-      // Get issues assinged to the user in gitlab
-      // these fields are appende to every issue:
+      this.issues = []
+      this.getTodos({action: 'assigned', state: 'pending', type: 'Issue'})
+      this.getTodos({action: 'mentioned', state: 'pending', type: 'Issue'})
+      this.getTodos({action: 'directly_addressed', state: 'pending', type: 'Issue'})
+    },
+    
+    getTodos (params) {
+      // Get issues as todos
+      // these fields are appended to every issue:
       // - project_namespace
       // - project_name (actually, it is the "project name" part of the URL. You'll only notice differentes if the name has special characters
       // - project_url : the URL to the project
       // - report_hours: time to report next time the user clicks on 'report'
-
-      /* note: scope can be:
-      - created_by_me (created-by-me if version<11) This is the default value
-      - assigned_to_me (assigned-to-me if version<11)
-      - all
-      */
-      this.$http.get(GITLAB + '/api/v4/issues', {params: {scope: 'assigned-to-me', state: 'opened'}, headers: {'Private-Token': this.privateToken}}).then( response => {
-        let myissues = response.body
+      this.$http.get(GITLAB + '/api/v4/todos', {params: params, headers: {'Private-Token': this.privateToken}}).then( response => {
+        let mytodos = response.body
         this.calendarEvents = []
         let processedMilestones = []
-        for(let i=0; i<myissues.length; i++) {
-          let issue = myissues[i]
+        for(let i=0; i<mytodos.length; i++) {
+          let issue = mytodos[i].target
           // build assignee names
           issue.assignee_names = issue.assignees.map( a => a.name ).join()
 
@@ -182,8 +193,9 @@ export default {
               processedMilestones.push(issue.milestone.iid)
             }
           }
+          
+          this.issues.push(issue)
         }
-        this.issues = myissues
       })
     },
 
@@ -217,6 +229,7 @@ export default {
       // when a new token is configured, load issues
       basil.set('private-token', this.privateToken)
       this.getIssues()
+      this.getUser()
       this.activeTab = 'tab-reporter'
     }
   },
