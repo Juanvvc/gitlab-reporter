@@ -4,7 +4,26 @@
   <v-app>
     <v-content>
       <v-container>
-        <h1>Task viewer and reporter for {{ currentUser.name }}</h1>
+      
+        <div v-if="loggedUser.is_manager">
+          <v-select
+            :items="users"
+            v-model="currentUser"
+            label="Selected user"
+            single-line
+          >
+            <template slot="item" slot-scope="prop">
+              {{ prop.item.name }}
+            </template>
+            <template slot="selection" slot-scope="prop">
+              {{ prop.item.name }}
+            </template>
+          </v-select>
+        </div>
+      
+        <h1>
+          Task viewer and reporter for {{ currentUser.name }}
+        </h1>
 
         <v-tabs
           v-model="activeTab"
@@ -53,13 +72,18 @@
             <v-tab-item id="tab-config">
               <v-card flat>
                 <v-card-text>
-                  <p>This values are stored locally, in your browser's cache.</p>
+                  <p>These values are stored locally in your browser's cache.</p>
                   <v-text-field
                     v-model="privateToken"
                     label="Gitlab private token"
                     required
                     @change="tokenChanged"
                   ></v-text-field>
+                  <v-switch
+                    label="Show milestones"
+                    v-model="showMilestones"
+                    @change="showMilestonesChanged"
+                  ></v-switch>
                 </v-card-text>
               </v-card>
             </v-tab-item>
@@ -105,6 +129,8 @@ export default {
       calendarDate: new Date(), // the current date in the calendar
       loggedUser: {name: 'NOT_LOGGED'}, // the user currently logged on
       currentUser: {name: 'NOT_LOGGED'}, // the user currently shown. For not admins, it is the same than loggedUser
+      users: [],                // list of users
+      showMilestones: true
     }
   },
 
@@ -123,6 +149,8 @@ export default {
     // defined this field here. We do not need this to be watchtable
     this.processedMilestones = []
     
+    // get configuration
+    this.showMilestones = basil.get('show-milestones')
     // get the last used token from the cache
     this.privateToken = basil.get('private-token')
     if(!this.privateToken) {
@@ -130,6 +158,7 @@ export default {
     } else {
       this.getIssues()
       this.getUser()
+      this.getUsers()
       this.activeTab = 'tab-reporter'
     }
   },
@@ -140,6 +169,12 @@ export default {
       this.$http.get(GITLAB + '/api/v4/user', {headers: {'Private-Token': this.privateToken}}).then( response => {
           this.loggedUser = response.body
           this.currentUser = this.loggedUser
+      })
+    },
+    
+    getUsers () {
+      this.$http.get(GITLAB + '/api/v4/users', {headers: {'Private-Token': this.privateToken}}).then( response => {
+          this.users = response.body
       })
     },
 
@@ -160,7 +195,7 @@ export default {
         // mentions
         this.getTodos({action: 'mentioned', state: 'pending', type: 'Issue'})
         // TODOs created by me.
-        // For some reason, if the TODO was set as DONE but marked again, it won't appear with the other filters
+        // For some reason, if the todo was set as DONE but marked again, it won't appear with the other filters
         this.getTodos({action: 'marked', state: 'pending', type: 'Issue'})
         // issues directly addressed.
         // These are mentions in the first line of the description. For some reason, they are not classified as "mentioned" or "assigned"
@@ -197,13 +232,14 @@ export default {
           if(issue.due_date) {
             let event = {
               startDate: issue.due_date,
-              title: issue.project_name + ': ' + issue.title + ' (' + issue.time_stats.human_time_estimate + ')'
+              title: issue.project_name + ': ' + issue.title + ' (' + issue.time_stats.human_time_estimate + ')',
+              classes: 'calendar-task'
             }
             this.calendarEvents.push(event)
           }
 
           // manage milestones
-          if(issue.milestone) {
+          if(this.showMilestones && issue.milestone) {
             let milestoneStartDate = issue.milestone.start_date?issue.milestone.start_date:issue.milestone.created_at
             let milestoneEndDate = issue.milestone.due_date
             // if the milestone has an end data and it is not yet processes, add the event
@@ -212,7 +248,7 @@ export default {
                 startDate: milestoneStartDate,
                 endDate: milestoneEndDate,
                 title: issue.milestone.title,
-                classes: ['orange']
+                classes: 'calendar-milestone'
               })
               this.processedMilestones.push(issue.milestone.iid)
             }
@@ -254,7 +290,15 @@ export default {
       basil.set('private-token', this.privateToken)
       this.getIssues()
       this.getUser()
+      this.getUsers()
       this.activeTab = 'tab-reporter'
+    },
+    
+    showMilestonesChanged(show) {
+      // show/hide milestones.
+      // TODO: do not reload issues for this
+      basil.set('show-milestones', this.showMilestones)
+      this.getIssues()
     }
   },
 
@@ -264,5 +308,14 @@ export default {
 <style>
 .pointable{
     cursor: pointer;
+}
+
+.theme-default .cv-event.calendar-milestone {
+	background-color: #ffe7d0;
+	border-color: #f7e0c7;
+}
+.theme-default .cv-event.calendar-task {
+	background-color:#e7e7ff;
+	border-color: #e0e0f0;
 }
 </style>
