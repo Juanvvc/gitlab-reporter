@@ -120,6 +120,9 @@ export default {
   },
 
   created () {
+    // defined this field here. We do not need this to be watchtable
+    this.processedMilestones = []
+    
     // get the last used token from the cache
     this.privateToken = basil.get('private-token')
     if(!this.privateToken) {
@@ -141,23 +144,34 @@ export default {
     },
 
     getIssues () {
-      // get issues
+      // get issues. This method resets issues, calendarEvents and processedMilestones
       this.issues = []
+      this.calendarEvents = []
+      this.processedMilestones = []
+
       if (this.loggedUser.is_admin) {
         // if the logged user is an admin, get issues for the current user with sudo parameter
-        this.getTodos({action: 'assigned', state: 'pending', type: 'Issue', sudo: this.currentUser.username})
-        this.getTodos({action: 'mentioned', state: 'pending', type: 'Issue', sudo: this.currentUser.username})
-        this.getTodos({action: 'directly_addressed', state: 'pending', type: 'Issue', sudo: this.currentUser.username})
+        this.getTodos({state: 'pending', type: 'Issue', sudo: this.currentUser.username})
       } else {
         // if the logged user is not an admin, just get the default issues (i.e., his/her issues)
+        /*
+        // assigned to me
         this.getTodos({action: 'assigned', state: 'pending', type: 'Issue'})
+        // mentions
         this.getTodos({action: 'mentioned', state: 'pending', type: 'Issue'})
+        // TODOs created by me.
+        // For some reason, if the TODO was set as DONE but marked again, it won't appear with the other filters
+        this.getTodos({action: 'marked', state: 'pending', type: 'Issue'})
+        // issues directly addressed.
+        // These are mentions in the first line of the description. For some reason, they are not classified as "mentioned" or "assigned"
         this.getTodos({action: 'directly_addressed', state: 'pending', type: 'Issue'})
+        */        
+        this.getTodos({state: 'pending', type: 'Issue'})
       }
     },
     
     getTodos (params) {
-      // Get issues as todos
+      // Get issues as todos. This method does not reset issues or calendarEvents
       // these fields are appended to every issue:
       // - project_namespace
       // - project_name (actually, it is the "project name" part of the URL. You'll only notice differentes if the name has special characters
@@ -165,8 +179,6 @@ export default {
       // - report_hours: time to report next time the user clicks on 'report'
       this.$http.get(GITLAB + '/api/v4/todos', {params: params, headers: {'Private-Token': this.privateToken}}).then( response => {
         let mytodos = response.body
-        this.calendarEvents = []
-        let processedMilestones = []
         for(let i=0; i<mytodos.length; i++) {
           let issue = mytodos[i].target
           // build assignee names
@@ -195,14 +207,14 @@ export default {
             let milestoneStartDate = issue.milestone.start_date?issue.milestone.start_date:issue.milestone.created_at
             let milestoneEndDate = issue.milestone.due_date
             // if the milestone has an end data and it is not yet processes, add the event
-            if (milestoneEndDate && processedMilestones.indexOf(issue.milestone.iid) == -1) {
+            if (milestoneEndDate && this.processedMilestones.indexOf(issue.milestone.iid) == -1) {
               this.calendarEvents.push({
                 startDate: milestoneStartDate,
                 endDate: milestoneEndDate,
                 title: issue.milestone.title,
                 classes: ['orange']
               })
-              processedMilestones.push(issue.milestone.iid)
+              this.processedMilestones.push(issue.milestone.iid)
             }
           }
           
