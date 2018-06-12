@@ -51,6 +51,7 @@
             <v-tab-item id="tab-config">
               <v-card flat>
                 <v-card-text>
+                  <p>This values are stored locally, in your browser's cache.</p>
                   <v-text-field
                     v-model="privateToken"
                     label="Gitlab private token"
@@ -115,7 +116,7 @@ export default {
   },
 
   created () {
-    // get the lat used token
+    // get the last used token from the cache
     this.privateToken = basil.get('private-token')
     if(!this.privateToken) {
       this.activeTab = 'tab-config'
