@@ -4,7 +4,7 @@
   <v-app>
     <v-content>
       <v-container>
-        <h1>Task viewer and reporter for {{ user.name }}</h1>
+        <h1>Task viewer and reporter for {{ currentUser.name }}</h1>
 
         <v-tabs
           v-model="activeTab"
@@ -103,7 +103,8 @@ export default {
       privateToken: null,       // user private token in gitlab
       calendarEvents: [],       // an array of calendar events, as vue-simple-calendar needs
       calendarDate: new Date(), // the current date in the calendar
-      user: {name: 'NOT_LOGGED'}// the user currently logged on
+      loggedUser: {name: 'NOT_LOGGED'}, // the user currently logged on
+      currentUser: {name: 'NOT_LOGGED'}, // the user currently shown. For not admins, it is the same than loggedUser
     }
   },
 
@@ -132,16 +133,27 @@ export default {
 
   methods: {
     getUser () {
+      // the the currently logged user
       this.$http.get(GITLAB + '/api/v4/user', {headers: {'Private-Token': this.privateToken}}).then( response => {
-          this.user = response.body
+          this.loggedUser = response.body
+          this.currentUser = this.loggedUser
       })
     },
 
     getIssues () {
+      // get issues
       this.issues = []
-      this.getTodos({action: 'assigned', state: 'pending', type: 'Issue'})
-      this.getTodos({action: 'mentioned', state: 'pending', type: 'Issue'})
-      this.getTodos({action: 'directly_addressed', state: 'pending', type: 'Issue'})
+      if (this.loggedUser.is_admin) {
+        // if the logged user is an admin, get issues for the current user with sudo parameter
+        this.getTodos({action: 'assigned', state: 'pending', type: 'Issue', sudo: this.currentUser.username})
+        this.getTodos({action: 'mentioned', state: 'pending', type: 'Issue', sudo: this.currentUser.username})
+        this.getTodos({action: 'directly_addressed', state: 'pending', type: 'Issue', sudo: this.currentUser.username})
+      } else {
+        // if the logged user is not an admin, just get the default issues (i.e., his/her issues)
+        this.getTodos({action: 'assigned', state: 'pending', type: 'Issue'})
+        this.getTodos({action: 'mentioned', state: 'pending', type: 'Issue'})
+        this.getTodos({action: 'directly_addressed', state: 'pending', type: 'Issue'})
+      }
     },
     
     getTodos (params) {
