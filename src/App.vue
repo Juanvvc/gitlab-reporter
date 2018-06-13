@@ -5,12 +5,13 @@
     <v-content>
       <v-container>
       
-        <div v-if="loggedUser.is_manager">
+        <div v-if="loggedUser.is_admin">
           <v-select
             :items="users"
             v-model="currentUser"
             label="Selected user"
             single-line
+            @change="changeUser"
           >
             <template slot="item" slot-scope="prop">
               {{ prop.item.name }}
@@ -173,7 +174,7 @@ export default {
     },
     
     getUsers () {
-      this.$http.get(GITLAB + '/api/v4/users', {headers: {'Private-Token': this.privateToken}}).then( response => {
+      this.$http.get(GITLAB + '/api/v4/users', {params: {'active': 'true'}, headers: {'Private-Token': this.privateToken}}).then( response => {
           this.users = response.body
       })
     },
@@ -298,6 +299,11 @@ export default {
       // show/hide milestones.
       // TODO: do not reload issues for this
       basil.set('show-milestones', this.showMilestones)
+      this.getIssues()
+    },
+    
+    changeUser(user) {
+      this.currentUser = user
       this.getIssues()
     }
   },
