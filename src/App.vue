@@ -267,12 +267,14 @@ export default {
         let hoursToReport = parseFloat(issue.report_hours)
         let commentToReport = issue.report_comment
         if(!isNaN(hoursToReport) && hoursToReport > 0) {
+          // create the report message
           let spendTxt='/spend ' + hoursToReport + 'h ' + date;
           if(commentToReport) {
             spendTxt = spendTxt + '\n' + commentToReport
           }
+          
+          // report
           let reportURL = '/api/v4/projects/' + issue.project_id+ '/issues/' + issue.iid + '/notes'
-          console.log(spendTxt)
           this.$http.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}})
           // comments which only report hours, i.e. without a commentToReport, are not real comments.
           // The previous request returns 404 error always if there is not a commentToReport, but the time is actually reported.
@@ -289,6 +291,7 @@ export default {
 
     tokenChanged(token) {
       // when a new token is configured, load issues
+      this.privateToken = token
       basil.set('private-token', this.privateToken)
       this.getIssues()
       this.getUser()
