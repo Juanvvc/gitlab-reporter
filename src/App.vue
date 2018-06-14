@@ -274,7 +274,8 @@ export default {
           let reportURL = '/api/v4/projects/' + issue.project_id+ '/issues/' + issue.iid + '/notes'
           console.log(spendTxt)
           this.$http.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}})
-          // Since we are reporting, we are not really creating a real note. The previous request will return 404 always
+          // comments which only report hours, i.e. without a commentToReport, are not real comments.
+          // The previous request returns 404 error always if there is not a commentToReport, but the time is actually reported.
         }
         issue.report_hours = 0;
         issue.report_comment = '';
