@@ -4,7 +4,7 @@
   <v-app>
     <v-content>
       <v-container>
-      
+
         <div v-if="loggedUser.is_admin">
           <v-select
             :items="users"
@@ -21,10 +21,12 @@
             </template>
           </v-select>
         </div>
-      
+
         <h1>
           Task viewer and reporter for {{ currentUser.name }}
         </h1>
+
+        <p>Comments can include <a href="https://docs.gitlab.com/ee/user/project/quick_actions.html">quick actions</a>, such as <em>/done</em> or <em>/close</em>. GitLab marks a task as done if a user comments on it. To prevent this, a <em>/todo</em> will be sent automatically after all comments, unless <em>/done</em> or <em>/close</em> is used.</p>
 
         <v-tabs
           v-model="activeTab"
@@ -40,7 +42,7 @@
               <v-card flat>
                 <v-card-text>
                   <h2>Pending Todos</h2>
-                  
+
                   <p>This list includes issues assigned to you and issues where you are mentioned.</p>
 
                   <p>Number of tasks: {{ issues.length }}</p>
@@ -149,7 +151,7 @@ export default {
   created () {
     // defined this field here. We do not need this to be watchtable
     this.processedMilestones = []
-    
+
     // get configuration
     this.showMilestones = basil.get('show-milestones')
     // get the last used token from the cache
@@ -172,7 +174,7 @@ export default {
           this.currentUser = this.loggedUser
       })
     },
-    
+
     getUsers () {
       this.$http.get(GITLAB + '/api/v4/users', {params: {'active': 'true'}, headers: {'Private-Token': this.privateToken}}).then( response => {
           this.users = response.body
@@ -201,11 +203,11 @@ export default {
         // issues directly addressed.
         // These are mentions in the first line of the description. For some reason, they are not classified as "mentioned" or "assigned"
         this.getTodos({action: 'directly_addressed', state: 'pending', type: 'Issue'})
-        */        
+        */
         this.getTodos({state: 'pending', type: 'Issue'})
       }
     },
-    
+
     getTodos (params) {
       // Get issues as todos. This method does not reset issues or calendarEvents
       // these fields are appended to every issue:
@@ -254,7 +256,7 @@ export default {
               this.processedMilestones.push(issue.milestone.iid)
             }
           }
-          
+
           this.issues.push(issue)
         }
       })
@@ -269,15 +271,26 @@ export default {
         if(!isNaN(hoursToReport) && hoursToReport > 0) {
           // create the report message
           let spendTxt='/spend ' + hoursToReport + 'h ' + date;
+          let explicitelyClosed = false
           if(commentToReport) {
             spendTxt = spendTxt + '\n' + commentToReport
+            // if /done or /close is used, set the flag
+            explicitelyClosed = (commentToReport.indexOf("/done") + commentToReport.indexOf("/close") !== -2)
           }
-          
+
           // report
           let reportURL = '/api/v4/projects/' + issue.project_id+ '/issues/' + issue.iid + '/notes'
-          this.$http.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}})
-          // comments which only report hours, i.e. without a commentToReport, are not real comments.
-          // The previous request returns 404 error always if there is not a commentToReport, but the time is actually reported.
+          this.$http.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( response => {
+            // comments which only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
+            // if we get a 200 response from the server, there was a real comment.
+            // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
+            // Unless the user explicitely used /done or /close, add a todo to the issue.
+            if(!explicitelyClosed) {
+              this.$http.post(GITLAB + reportURL, {body: "/todo"}, {headers: {'Private-Token': this.privateToken}});
+            }
+            // the result from this command is ignored
+            console.log(JSON.stringify(response));
+          });
         }
         issue.report_hours = 0;
         issue.report_comment = '';
@@ -298,14 +311,14 @@ export default {
       this.getUsers()
       this.activeTab = 'tab-reporter'
     },
-    
+
     showMilestonesChanged(show) {
       // show/hide milestones.
       // TODO: do not reload issues for this
       basil.set('show-milestones', this.showMilestones)
       this.getIssues()
     },
-    
+
     changeUser(user) {
       this.currentUser = user
       this.getIssues()
