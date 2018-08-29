@@ -47,7 +47,7 @@
 
                   <p>Number of tasks: {{ issues.length }}</p>
 
-                  <v-alert v-model="issues.length >= 20" type="warning">
+                  <v-alert v-if="issues.length >= 20" type="warning">
                     At most, only 20 random issues are shown. Do you really have more than 20 open issues?
                   </v-alert>
 
@@ -125,7 +125,7 @@ export default {
 
   data () {
     return {
-      issues: [],               // issues, as returned by gitlab (see getIssues for some extra fields)
+      issues: [],               // issues, as returned by gitlab (see getTasks for some extra fields)
       activeTab: null,          // identifier of the currently selected tab
       privateToken: null,       // user private token in gitlab
       calendarEvents: [],       // an array of calendar events, as vue-simple-calendar needs
@@ -159,7 +159,7 @@ export default {
     if(!this.privateToken) {
       this.activeTab = 'tab-config'
     } else {
-      this.getIssues()
+      this.getTasks()
       this.getUser()
       this.getUsers()
       this.activeTab = 'tab-reporter'
@@ -181,44 +181,66 @@ export default {
       })
     },
 
-    getIssues () {
-      // get issues. This method resets issues, calendarEvents and processedMilestones
+    getTasks () {
+      // get issues and totos. This method resets issues, calendarEvents and processedMilestones
       this.issues = []
       this.calendarEvents = []
       this.processedMilestones = []
 
       if (this.loggedUser.is_admin) {
         // if the logged user is an admin, get issues for the current user with sudo parameter
-        this.getTodos({state: 'pending', type: 'Issue', sudo: this.currentUser.username})
+        this.getRemoteTasks({state: 'pending', type: 'Issue', sudo: this.currentUser.username})
       } else {
         // if the logged user is not an admin, just get the default issues (i.e., his/her issues)
-        /*
         // assigned to me
-        this.getTodos({action: 'assigned', state: 'pending', type: 'Issue'})
+        //this.getRemoteTasks({action: 'assigned', state: 'pending', type: 'Issue'})
         // mentions
-        this.getTodos({action: 'mentioned', state: 'pending', type: 'Issue'})
+        //this.getRemoteTasks({action: 'mentioned', state: 'pending', type: 'Issue'})
         // TODOs created by me.
         // For some reason, if the todo was set as DONE but marked again, it won't appear with the other filters
-        this.getTodos({action: 'marked', state: 'pending', type: 'Issue'})
+        //this.getRemoteTasks({action: 'marked', state: 'pending', type: 'Issue'})
         // issues directly addressed.
         // These are mentions in the first line of the description. For some reason, they are not classified as "mentioned" or "assigned"
-        this.getTodos({action: 'directly_addressed', state: 'pending', type: 'Issue'})
-        */
-        this.getTodos({state: 'pending', type: 'Issue'})
+        //this.getRemoteTasks({action: 'directly_addressed', state: 'pending', type: 'Issue'})
+        // All the above are included in this call: pending TODOs
+        this.getRemoteTasks({state: 'pending', type: 'Issue'})
+        // not TODOs, but issues assinged to me. Some times this issues are not TODOs!
+        // TODO: assigned-to-me is deprecated in gitlab>11. Use assigned_to_me instead
+        this.getRemoteTasks({scope: 'assigned-to-me', state: 'opened'}, GITLAB + '/api/v4/issues')
       }
     },
 
-    getTodos (params) {
+    getRemoteTasks (params, url) {
+      // Add TODOs (default) or ISSUES to the list
+      // - params for the request. Check https://docs.gitlab.com/ce/api/issues.html or https://docs.gitlab.com/ce/api/todos.html
+      // - url for the request. Default: GITLAB + '/api/v4/todos'. Use also GITLAB + '/api/v4/issues'
+
+      if(url === undefined) {
+        url = GITLAB + '/api/v4/todos'
+      }
       // Get issues as todos. This method does not reset issues or calendarEvents
       // these fields are appended to every issue:
       // - project_namespace
       // - project_name (actually, it is the "project name" part of the URL. You'll only notice differentes if the name has special characters
       // - project_url : the URL to the project
       // - report_hours: time to report next time the user clicks on 'report'
-      this.$http.get(GITLAB + '/api/v4/todos', {params: params, headers: {'Private-Token': this.privateToken}}).then( response => {
+      this.$http.get(url, {params: params, headers: {'Private-Token': this.privateToken}}).then( response => {
         let mytodos = response.body
         for(let i=0; i<mytodos.length; i++) {
-          let issue = mytodos[i].target
+          // TODOs API use target property for issues. ISSUES API includes the issue directly
+          let issue = (mytodos[i].hasOwnProperty('target') ? mytodos[i].target : mytodos[i])
+
+          // check if the issue is already in the array, and ignore if it is
+          let issueAlreadyProcessed = false
+          for(let j=0; j<this.issues.length; j++) {
+            if(this.issues[j].id === issue.id) {
+              issueAlreadyProcessed = true
+            }
+          }
+          if(issueAlreadyProcessed) {
+            continue
+          }
+
           // build assignee names
           issue.assignee_names = issue.assignees.map( a => a.name ).join()
 
@@ -280,16 +302,15 @@ export default {
 
           // report
           let reportURL = '/api/v4/projects/' + issue.project_id+ '/issues/' + issue.iid + '/notes'
-          this.$http.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( response => {
+          this.$http.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( () => {
             // comments which only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
             // if we get a 200 response from the server, there was a real comment.
             // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
             // Unless the user explicitely used /done or /close, add a todo to the issue.
             if(!explicitelyClosed) {
               this.$http.post(GITLAB + reportURL, {body: "/todo"}, {headers: {'Private-Token': this.privateToken}});
+              // the result from this POST command is ignored
             }
-            // the result from this command is ignored
-            console.log(JSON.stringify(response));
           });
         }
         issue.report_hours = 0;
@@ -306,22 +327,22 @@ export default {
       // when a new token is configured, load issues
       this.privateToken = token
       basil.set('private-token', this.privateToken)
-      this.getIssues()
+      this.getTasks()
       this.getUser()
       this.getUsers()
       this.activeTab = 'tab-reporter'
     },
 
-    showMilestonesChanged(show) {
+    showMilestonesChanged() {
       // show/hide milestones.
       // TODO: do not reload issues for this
       basil.set('show-milestones', this.showMilestones)
-      this.getIssues()
+      this.getTasks()
     },
 
     changeUser(user) {
       this.currentUser = user
-      this.getIssues()
+      this.getTasks()
     }
   },
 

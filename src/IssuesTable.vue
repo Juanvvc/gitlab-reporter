@@ -45,7 +45,7 @@ Shows a table with information about issues
 <script>
 export default {
   props: {
-    issues: {
+    issues: {    // issues, as returned by gitlab (see getIssues for some extra fields)
       required: true,
       type: Array
     }
@@ -75,4 +75,3 @@ export default {
   }
 }
 </script>
-
