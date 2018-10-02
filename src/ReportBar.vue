@@ -13,7 +13,7 @@ Events:
 -->
 
 <template>
-  <v-layout row wrap>
+  <v-layout row wrap align-center>
     <v-spacer></v-spacer>
     <v-flex xs12 sm6 md4>
       <v-menu

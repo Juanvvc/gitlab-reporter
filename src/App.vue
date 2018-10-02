@@ -32,10 +32,12 @@
           v-model="activeTab"
           color="primary"
           dark
-        >
-          <v-tab href="#tab-reporter"><v-icon>timer</v-icon> Reporter</v-tab>
-          <v-tab href="#tab-calendar"><v-icon>calendar_today</v-icon> Calendar</v-tab>
-          <v-tab href="#tab-config"><v-icon>settings</v-icon> Settings</v-tab>
+          icons-and-text
+          centered >
+
+          <v-tab href="#tab-reporter">Reporter<v-icon>timer</v-icon></v-tab>
+          <v-tab href="#tab-calendar">Calendar<v-icon>calendar_today</v-icon></v-tab>
+          <v-tab href="#tab-config">Settings<v-icon>settings</v-icon></v-tab>
 
             <!-- reporter -->
             <v-tab-item id="tab-reporter">

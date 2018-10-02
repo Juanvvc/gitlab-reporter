@@ -21,7 +21,15 @@ Shows a table with information about issues
           <td>{{ props.item.time_stats.human_time_estimate }}</td>
           <td>{{ props.item.time_stats.human_total_time_spent }}</td>
           <td>
-            <span @click="editReport(props.item)" class="pointable"><v-icon>timer</v-icon>&nbsp;{{props.item.report_hours}}h</span>
+            <v-layout row align-center>
+              <v-tooltip bottom>
+                <v-btn slot="activator" icon @click="editReport(props.item)">
+                  <v-icon>timer</v-icon>
+                </v-btn>
+                <span>Show a dialog to report tasks</span>
+              </v-tooltip>
+              <span>{{props.item.report_hours}}h</span>
+            </v-layout>
           </td>
         </tr>
       </template>
@@ -31,10 +39,11 @@ Shows a table with information about issues
       <v-card>
         <v-card-title><span class="headline">Report</span></v-card-title>
         <v-card-text>
-          <v-text-field label="Hours to report" v-model="selectedIssue.report_hours" autofocus></v-text-field>
+          <v-text-field label="Hours to report" hint="Use only float numbers" v-model="selectedIssue.report_hours" autofocus></v-text-field>
           <v-text-field label="Optional comment" v-model="selectedIssue.report_comment" multi-line></v-text-field>
         </v-card-text>
         <v-card-actions>
+          <v-spacer />
           <v-btn color="primary" dark flat @click.native="showReportDialog=false">OK</v-btn>
         </v-card-actions>
       </v-card>
