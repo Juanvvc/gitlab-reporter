@@ -35,16 +35,16 @@ Shows a table with information about issues
       </template>
     </v-data-table>
 
-    <v-dialog v-if="showReportDialog" v-model="showReportDialog" max-width="500px" persistent>
+    <v-dialog v-if="showReportDialog" v-model="showReportDialog" max-width="600px" persistent>
       <v-card>
-        <v-card-title><span class="headline">Report</span></v-card-title>
+        <v-card-title><span class="headline">Report to "{{selectedIssue.project_name}} - {{selectedIssue.title}}"</span></v-card-title>
         <v-card-text>
           <v-text-field label="Hours to report" hint="Use only float numbers" v-model="selectedIssue.report_hours" autofocus></v-text-field>
-          <v-text-field label="Optional comment" v-model="selectedIssue.report_comment" multi-line></v-text-field>
+          <v-text-field label="Optional comment" hint="Comments can include quick actions, such as /done or /close" v-model="selectedIssue.report_comment" multi-line></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" dark flat @click.native="showReportDialog=false">OK</v-btn>
+          <v-btn color="primary" flat @click.native="showReportDialog=false">OK</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

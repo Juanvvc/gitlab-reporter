@@ -1,14 +1,10 @@
+import '@babel/polyfill'
 import Vue from 'vue'
+import './plugins/vuetify'
 import App from './App.vue'
 
-import Vuetify from 'vuetify'
-import 'vuetify/dist/vuetify.min.css' // Ensure you are using css-loader
-Vue.use(Vuetify)
-
-import VueResource from 'vue-resource'
-Vue.use(VueResource);
+Vue.config.productionTip = false
 
 new Vue({
-  el: '#app',
   render: h => h(App)
-})
+}).$mount('#app')

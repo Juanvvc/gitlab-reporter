@@ -5,28 +5,43 @@
     <v-content>
       <v-container>
 
-        <div v-if="loggedUser.is_admin">
-          <v-select
-            :items="users"
-            v-model="currentUser"
-            label="Selected user"
-            single-line
-            @change="changeUser"
+        <v-snackbar
+          v-model="showAlertMessage"
+          :color="alertType"
+          :timeout="6000"
+          top
           >
-            <template slot="item" slot-scope="prop">
-              {{ prop.item.name }}
-            </template>
-            <template slot="selection" slot-scope="prop">
-              {{ prop.item.name }}
-            </template>
-          </v-select>
-        </div>
+          {{ alertMessage}}
+        </v-snackbar>
 
-        <h1>
-          Task viewer and reporter for {{ currentUser.name }}
-        </h1>
+        <v-toolbar app dark color="primary darken-2">
+          <v-toolbar-title>
+            <v-layout row align-center>
+              Task viewer and reporter for:&nbsp;&nbsp;
+              <span v-if="loggedUser.is_admin">
+                <v-select
+                  :items="users"
+                  v-model="currentUser"
+                  @change="changeUser"
+                >
+                  <template slot="item" slot-scope="prop">
+                    {{ prop.item.name }}
+                  </template>
+                  <template slot="selection" slot-scope="prop">
+                    {{ prop.item.name }}
+                  </template>
+                </v-select>
+              </span>
+              <span v-else>
+                {{ currentUser.name }}
+              </span>
+            </v-layout>
+          </v-toolbar-title>
+        </v-toolbar>
 
-        <p>Comments can include <a href="https://docs.gitlab.com/ee/user/project/quick_actions.html">quick actions</a>, such as <em>/done</em> or <em>/close</em>. GitLab marks a task as done if a user comments on it. To prevent this, a <em>/todo</em> will be sent automatically after all comments, unless <em>/done</em> or <em>/close</em> is used.</p>
+        <p>
+          Comments can include <a href="https://docs.gitlab.com/ee/user/project/quick_actions.html">quick actions</a>, such as <em>/done</em> or <em>/close</em>. GitLab marks a task as done if a user comments on it. To prevent this, a <em>/todo</em> will be sent automatically after all comments, unless <em>/done</em> or <em>/close</em> is used.
+        </p>
 
         <v-tabs
           v-model="activeTab"
@@ -68,8 +83,13 @@
                     class="theme-default"
                     :events="calendarEvents"
                     :show-date="calendarDate"
-                    @show-date-change="setCalendarDate"
-                  />
+                    @show-date-change="setCalendarDate" >
+                    <calendar-view-header
+                      slot="header"
+                      slot-scope="t"
+                      :header-props="t.headerProps"
+                      @input="setCalendarDate" />
+                  </calendar-view>
               </v-card>
             </v-tab-item>
 
@@ -105,12 +125,13 @@
 
 <script>
 
-import IssuesTable from './IssuesTable.vue'
-import ReportComponent from './ReportBar.vue'
-import CalendarView from 'vue-simple-calendar'
-require("vue-simple-calendar/dist/static/css/default.css")
+import IssuesTable from '@/components/IssuesTable.vue'
+import ReportBar from '@/components/ReportBar.vue'
+import {CalendarView, CalendarViewHeader} from 'vue-simple-calendar'
+require("vue-simple-calendar/static/css/default.css")
 
-import 'basil.js';
+import 'basil.js'
+const axios = require('axios')
 
 let GITLAB = 'http://gitlab.incide.es'
 
@@ -120,9 +141,10 @@ export default {
   name: 'app',
 
   components: {
-    'issues-table': IssuesTable,
-    'report-bar': ReportComponent,
-    'calendar-view': CalendarView
+    IssuesTable,
+    ReportBar,
+    CalendarView,
+    CalendarViewHeader
   },
 
   data () {
@@ -135,7 +157,11 @@ export default {
       loggedUser: {name: 'NOT_LOGGED'}, // the user currently logged on
       currentUser: {name: 'NOT_LOGGED'}, // the user currently shown. For not admins, it is the same than loggedUser
       users: [],                // list of users
-      showMilestones: true
+      showMilestones: true,
+      // manage alert messages
+      showAlertMessage: false,
+      alertMessage: null,
+      alertType: 'sucess'
     }
   },
 
@@ -151,16 +177,19 @@ export default {
   },
 
   created () {
-    // defined this field here. We do not need this to be watchtable
+    // We do not need this field to be watchable
     this.processedMilestones = []
 
     // get configuration
     this.showMilestones = basil.get('show-milestones')
     // get the last used token from the cache
     this.privateToken = basil.get('private-token')
+
     if(!this.privateToken) {
+      // if there is not configuration stored, show the configuration tab
       this.activeTab = 'tab-config'
     } else {
+      // if there is a token, load the user
       this.getTasks()
       this.getUser()
       this.getUsers()
@@ -169,22 +198,38 @@ export default {
   },
 
   methods: {
+    showError(msg) {
+      this.alertMessage = msg
+      this.alertType = 'error'
+    },
+
+    showMessage(info) {
+      this.alertMessage = info
+      this.alertType = 'success'
+    },
+
     getUser () {
       // the the currently logged user
-      this.$http.get(GITLAB + '/api/v4/user', {headers: {'Private-Token': this.privateToken}}).then( response => {
-          this.loggedUser = response.body
+      let url = `${GITLAB}/api/v4/user`
+      axios.get(url, {headers: {'Private-Token': this.privateToken}}).then( response => {
+          this.loggedUser = response.data
           this.currentUser = this.loggedUser
-      })
+        }).catch( () => {
+          this.showError(`Cannot connect to %{GITLAB}`)
+        })
     },
 
     getUsers () {
-      this.$http.get(GITLAB + '/api/v4/users', {params: {'active': 'true'}, headers: {'Private-Token': this.privateToken}}).then( response => {
-          this.users = response.body
-      })
+      // get available users. This method only works if we have an administrative token
+      axios.get(GITLAB + '/api/v4/users', {params: {'active': 'true'}, headers: {'Private-Token': this.privateToken}}).then( response => {
+          this.users = response.data
+        }).catch( () => {
+          this.showError(`Cannot connect to %{GITLAB}`)
+        })
     },
 
     getTasks () {
-      // get issues and totos. This method resets issues, calendarEvents and processedMilestones
+      // get issues and TODOs. This method resets arrays issues, calendarEvents and processedMilestones
       this.issues = []
       this.calendarEvents = []
       this.processedMilestones = []
@@ -226,8 +271,8 @@ export default {
       // - project_name (actually, it is the "project name" part of the URL. You'll only notice differentes if the name has special characters
       // - project_url : the URL to the project
       // - report_hours: time to report next time the user clicks on 'report'
-      this.$http.get(url, {params: params, headers: {'Private-Token': this.privateToken}}).then( response => {
-        let mytodos = response.body
+      axios.get(url, {params: params, headers: {'Private-Token': this.privateToken}}).then( response => {
+        let mytodos = response.data
         for(let i=0; i<mytodos.length; i++) {
           // TODOs API use target property for issues. ISSUES API includes the issue directly
           let issue = (mytodos[i].hasOwnProperty('target') ? mytodos[i].target : mytodos[i])
@@ -283,6 +328,8 @@ export default {
 
           this.issues.push(issue)
         }
+      }).catch( () => {
+        this.showError(`Cannot connect to %{GITLAB}`)
       })
     },
 
@@ -304,16 +351,18 @@ export default {
 
           // report
           let reportURL = '/api/v4/projects/' + issue.project_id+ '/issues/' + issue.iid + '/notes'
-          this.$http.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( () => {
+          axios.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( () => {
             // comments which only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
             // if we get a 200 response from the server, there was a real comment.
             // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
             // Unless the user explicitely used /done or /close, add a todo to the issue.
             if(!explicitelyClosed) {
-              this.$http.post(GITLAB + reportURL, {body: "/todo"}, {headers: {'Private-Token': this.privateToken}});
+              axios.post(GITLAB + reportURL, {body: "/todo"}, {headers: {'Private-Token': this.privateToken}});
               // the result from this POST command is ignored
             }
-          });
+          }).catch( () => {
+            this.showError(`Cannot connect to %{GITLAB}`)
+          })
         }
         issue.report_hours = 0;
         issue.report_comment = '';
@@ -352,6 +401,10 @@ export default {
 </script>
 
 <style>
+div#app {
+  background-color: #eee;
+}
+
 .pointable{
     cursor: pointer;
 }
