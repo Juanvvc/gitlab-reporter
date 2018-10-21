@@ -133,7 +133,7 @@ require("vue-simple-calendar/static/css/default.css")
 import 'basil.js'
 const axios = require('axios')
 
-let GITLAB = 'http://gitlab.incide.es'
+let GITLAB = 'https://gitlab.incide.es'
 
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
