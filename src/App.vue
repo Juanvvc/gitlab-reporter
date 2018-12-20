@@ -53,66 +53,68 @@
           <v-tab href="#tab-reporter">Reporter<v-icon>timer</v-icon></v-tab>
           <v-tab href="#tab-calendar">Calendar<v-icon>calendar_today</v-icon></v-tab>
           <v-tab href="#tab-config">Settings<v-icon>settings</v-icon></v-tab>
-
-            <!-- reporter -->
-            <v-tab-item id="tab-reporter">
-              <v-card flat>
-                <v-card-text>
-                  <h2>Pending Todos</h2>
-
-                  <p>This list includes issues assigned to you and issues where you are mentioned.</p>
-
-                  <p>Number of tasks: {{ issues.length }}</p>
-
-                  <v-alert v-if="issues.length >= 20" type="warning">
-                    At most, only 20 random issues are shown. Do you really have more than 20 open issues?
-                  </v-alert>
-
-                  <issues-table :issues="issues" />
-
-                  <report-bar @report-hours="reportHours" :total-hours-to-report="totalHoursToReport" />
-                </v-card-text>
-              </v-card>
-            </v-tab-item>
-
-            <!-- calendar -->
-            <v-tab-item id="tab-calendar">
-              <v-card flat height="800px">
-                  <calendar-view
-                    :starting-day-of-week="1"
-                    class="theme-default"
-                    :events="calendarEvents"
-                    :show-date="calendarDate"
-                    @show-date-change="setCalendarDate" >
-                    <calendar-view-header
-                      slot="header"
-                      slot-scope="t"
-                      :header-props="t.headerProps"
-                      @input="setCalendarDate" />
-                  </calendar-view>
-              </v-card>
-            </v-tab-item>
-
-            <!-- config -->
-            <v-tab-item id="tab-config">
-              <v-card flat>
-                <v-card-text>
-                  <p>These values are stored locally in your browser's cache.</p>
-                  <v-text-field
-                    v-model="privateToken"
-                    label="Gitlab private token"
-                    required
-                    @change="tokenChanged"
-                  ></v-text-field>
-                  <v-switch
-                    label="Show milestones"
-                    v-model="showMilestones"
-                    @change="showMilestonesChanged"
-                  ></v-switch>
-                </v-card-text>
-              </v-card>
-            </v-tab-item>
         </v-tabs>
+
+        <v-tabs-items v-model="activeTab" >
+          <!-- reporter -->
+          <v-tab-item value="tab-reporter">
+            <v-card flat>
+              <v-card-text>
+                <h2>Pending Todos</h2>
+
+                <p>This list includes issues assigned to you and issues where you are mentioned.</p>
+
+                <p>Number of tasks: {{ issues.length }}</p>
+
+                <v-alert v-if="issues.length >= 20" type="warning">
+                  At most, only 20 random issues are shown. Do you really have more than 20 open issues?
+                </v-alert>
+
+                <issues-table :issues="issues" />
+
+                <report-bar @report-hours="reportHours" :total-hours-to-report="totalHoursToReport" />
+              </v-card-text>
+            </v-card>
+          </v-tab-item>
+
+          <!-- calendar -->
+          <v-tab-item value="tab-calendar">
+            <v-card flat height="800px">
+                <calendar-view
+                  :starting-day-of-week="1"
+                  class="theme-default"
+                  :events="calendarEvents"
+                  :show-date="calendarDate"
+                  @show-date-change="setCalendarDate" >
+                  <calendar-view-header
+                    slot="header"
+                    slot-scope="t"
+                    :header-props="t.headerProps"
+                    @input="setCalendarDate" />
+                </calendar-view>
+            </v-card>
+          </v-tab-item>
+
+          <!-- config -->
+          <v-tab-item value="tab-config">
+            <v-card flat>
+              <v-card-text>
+                <p>These values are stored locally in your browser's cache.</p>
+                <v-text-field
+                  v-model="privateToken"
+                  label="Gitlab private token"
+                  required
+                  @change="tokenChanged"
+                ></v-text-field>
+                <v-switch
+                  label="Show milestones"
+                  v-model="showMilestones"
+                  @change="showMilestonesChanged"
+                ></v-switch>
+              </v-card-text>
+            </v-card>
+          </v-tab-item>
+        </v-tabs-items>
       </v-container>
 
       <v-footer class="pa-3">
@@ -350,12 +352,12 @@ export default {
           }
 
           // report
-          let reportURL = '/api/v4/projects/' + issue.project_id+ '/issues/' + issue.iid + '/notes'
+          let reportURL = '/api/v4/projects/' + issue.project_id + '/issues/' + issue.iid + '/notes'
           axios.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( () => {
-            // comments which only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
-            // if we get a 200 response from the server, there was a real comment.
+            // comments that only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
+            // if we get a 200 response from the server, it was a real comment.
             // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
-            // Unless the user explicitely used /done or /close, add a todo to the issue.
+            // Unless the user explicitely used /done or /close, send a /todo to the issue.
             if(!explicitelyClosed) {
               axios.post(GITLAB + reportURL, {body: "/todo"}, {headers: {'Private-Token': this.privateToken}});
               // the result from this POST command is ignored

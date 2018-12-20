@@ -40,7 +40,7 @@ Shows a table with information about issues
         <v-card-title><span class="headline">Report to "{{selectedIssue.project_name}} - {{selectedIssue.title}}"</span></v-card-title>
         <v-card-text>
           <v-text-field label="Hours to report" hint="Use only float numbers" v-model="selectedIssue.report_hours" autofocus></v-text-field>
-          <v-text-field label="Optional comment" hint="Comments can include quick actions, such as /done or /close" v-model="selectedIssue.report_comment" multi-line></v-text-field>
+          <v-textarea label="Optional comment" hint="Comments can include quick actions, such as /done or /close" v-model="selectedIssue.report_comment"></v-textarea>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
