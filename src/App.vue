@@ -50,8 +50,9 @@
           icons-and-text
           centered >
 
-          <v-tab href="#tab-reporter">Reporter<v-icon>timer</v-icon></v-tab>
+          <v-tab href="#tab-reporter">Reporter<v-icon>mdi-account-clock</v-icon></v-tab>
           <v-tab href="#tab-calendar">Calendar<v-icon>calendar_today</v-icon></v-tab>
+          <v-tab href="#tab-gantt">Gantt<v-icon>mdi-file-tree</v-icon></v-tab>
           <v-tab href="#tab-config">Settings<v-icon>settings</v-icon></v-tab>
         </v-tabs>
 
@@ -80,18 +81,30 @@
           <!-- calendar -->
           <v-tab-item value="tab-calendar">
             <v-card flat height="800px">
-                <calendar-view
-                  :starting-day-of-week="1"
-                  class="theme-default"
-                  :events="calendarEvents"
-                  :show-date="calendarDate"
-                  @show-date-change="setCalendarDate" >
-                  <calendar-view-header
-                    slot="header"
-                    slot-scope="t"
-                    :header-props="t.headerProps"
-                    @input="setCalendarDate" />
-                </calendar-view>
+              <h2>Calendar</h2>
+
+              <p>The calendar only shows open tasks</p>
+              <calendar-view
+                :starting-day-of-week="1"
+                class="theme-default"
+                :events="calendarEvents"
+                :show-date="calendarDate"
+                @show-date-change="setCalendarDate" >
+                <calendar-view-header
+                  slot="header"
+                  slot-scope="t"
+                  :header-props="t.headerProps"
+                  @input="setCalendarDate" />
+              </calendar-view>
+            </v-card>
+          </v-tab-item>
+
+          <!-- Gantt -->
+          <v-tab-item value="tab-gantt">
+            <v-card flat height="800px">
+              <h2>Gantt</h2>
+              <search-project :token="privateToken" :url="gitlabURL() + '/projects'" @change="selectedProjectId = arguments[0]"/>
+              <project-gantt :token="privateToken" :projectId="selectedProjectId" :url="gitlabURL() + '/projects'" />
             </v-card>
           </v-tab-item>
 
@@ -99,15 +112,17 @@
           <v-tab-item value="tab-config">
             <v-card flat>
               <v-card-text>
+                <h2>Settings</h2>
                 <p>These values are stored locally in your browser's cache.</p>
                 <v-text-field
                   v-model="privateToken"
                   label="Gitlab private token"
+                  :hint="`Get the token from ${tokenURL}`"
                   required
                   @change="tokenChanged"
                 ></v-text-field>
                 <v-switch
-                  label="Show milestones"
+                  label="Calendar: show milestones"
                   v-model="showMilestones"
                   @change="showMilestonesChanged"
                 ></v-switch>
@@ -129,13 +144,18 @@
 
 import IssuesTable from '@/components/IssuesTable.vue'
 import ReportBar from '@/components/ReportBar.vue'
+import SearchProject from '@/components/SearchProject.vue'
+import ProjectGantt from '@/components/ProjectGantt.vue'
 import {CalendarView, CalendarViewHeader} from 'vue-simple-calendar'
 require("vue-simple-calendar/static/css/default.css")
+
+require("@mdi/font/css/materialdesignicons.min.css")
+
 
 import 'basil.js'
 const axios = require('axios')
 
-let GITLAB = 'https://gitlab.incide.es'
+const GITLAB = 'https://gitlab.incide.es'
 
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
@@ -146,7 +166,9 @@ export default {
     IssuesTable,
     ReportBar,
     CalendarView,
-    CalendarViewHeader
+    CalendarViewHeader,
+    SearchProject,
+    ProjectGantt
   },
 
   data () {
@@ -163,7 +185,8 @@ export default {
       // manage alert messages
       showAlertMessage: false,
       alertMessage: null,
-      alertType: 'sucess'
+      alertType: 'sucess',
+      selectedProjectId: undefined // selected project id in the projects view
     }
   },
 
@@ -175,6 +198,10 @@ export default {
         rh += parseFloat(this.issues[i].report_hours);
       }
       return rh;
+    },
+
+    tokenURL() {
+      return `${GITLAB}/profile/personal_access_tokens`
     }
   },
 
@@ -200,6 +227,10 @@ export default {
   },
 
   methods: {
+    gitlabURL() {
+      return `${GITLAB}/api/v4`
+    },
+
     showError(msg) {
       this.alertMessage = msg
       this.alertType = 'error'
@@ -212,7 +243,7 @@ export default {
 
     getUser () {
       // the the currently logged user
-      let url = `${GITLAB}/api/v4/user`
+      let url = this.gitlabURL() + '/user'
       axios.get(url, {headers: {'Private-Token': this.privateToken}}).then( response => {
           this.loggedUser = response.data
           this.currentUser = this.loggedUser

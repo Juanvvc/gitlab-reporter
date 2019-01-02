@@ -24,7 +24,7 @@ Shows a table with information about issues
             <v-layout row align-center>
               <v-tooltip bottom>
                 <v-btn slot="activator" icon @click="editReport(props.item)">
-                  <v-icon>timer</v-icon>
+                  <v-icon>mdi-progress-clock</v-icon>
                 </v-btn>
                 <span>Show a dialog to report tasks</span>
               </v-tooltip>
