@@ -33,7 +33,7 @@ export default {
       this.isLoading = true
 
       // Lazily load input items
-      axios.get(this.url, {params: {'simple': 'true', 'archived': 'false', 'order_by': 'name', 'sort': 'asc', 'per_page': 20, 'search': val}, headers: {'Private-Token': this.token}})
+      axios.get(this.url, {params: {'simple': 'true', 'archived': 'true', 'order_by': 'name', 'sort': 'asc', 'per_page': 20, 'search': val}, headers: {'Private-Token': this.token}})
         .then(res => {
           this.projects = res.data.map(p => {return {name: p.name, id: p.id}})
         })
