@@ -13,6 +13,8 @@
 
 <script>
 const axios = require('axios')
+import Config from '@/lib/config.js'
+import Console from '@/lib/Console.js'
 
 export default {
   props: {
@@ -33,12 +35,12 @@ export default {
       this.isLoading = true
 
       // Lazily load input items
-      axios.get(this.url, {params: {'simple': 'true', 'archived': 'true', 'order_by': 'name', 'sort': 'asc', 'per_page': 20, 'search': val}, headers: {'Private-Token': this.token}})
+      axios.get(this.url, {params: {'simple': 'true', 'archived': 'true', 'order_by': 'name', 'sort': 'asc', 'per_page': Config.PROJECTS_PER_PAGE, 'search': val}, headers: {'Private-Token': this.token}})
         .then(res => {
           this.projects = res.data.map(p => {return {name: p.name, id: p.id}})
         })
         .catch(err => {
-          console.log(err)
+          Console.log(err)
         })
         .finally(() => (this.isLoading = false))
     }

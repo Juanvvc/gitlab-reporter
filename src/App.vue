@@ -67,8 +67,8 @@
 
                 <p>Number of tasks: {{ issues.length }}</p>
 
-                <v-alert v-if="issues.length >= 20" type="warning">
-                  At most, only 20 random issues are shown. Do you really have more than 20 open issues?
+                <v-alert v-if="issues.length >= maxTasks" type="warning">
+                  At most, only {{maxTasks}} random issues are shown. Do you really have more than {{maxTasks}} open issues?
                 </v-alert>
 
                 <issues-table :issues="issues" />
@@ -147,6 +147,7 @@ import ReportBar from '@/components/ReportBar.vue'
 import SearchProject from '@/components/SearchProject.vue'
 import ProjectGantt from '@/components/ProjectGantt.vue'
 import {CalendarView, CalendarViewHeader} from 'vue-simple-calendar'
+import Config from '@/lib/config.js'
 require("vue-simple-calendar/static/css/default.css")
 
 require("@mdi/font/css/materialdesignicons.min.css")
@@ -202,6 +203,10 @@ export default {
 
     tokenURL() {
       return `${GITLAB}/profile/personal_access_tokens`
+    },
+
+    maxTasks() {
+      return Config.PROJECTS_PER_PAGE
     }
   },
 
@@ -269,7 +274,7 @@ export default {
 
       if (this.loggedUser.is_admin) {
         // if the logged user is an admin, get issues for the current user with sudo parameter
-        this.getRemoteTasks({state: 'pending', type: 'Issue', sudo: this.currentUser.username})
+        this.getRemoteTasks({state: 'pending', type: 'Issue', sudo: this.currentUser.username, per_page: Config.PROJECTS_PER_PAGE})
       } else {
         // if the logged user is not an admin, just get the default issues (i.e., his/her issues)
         // assigned to me
@@ -283,10 +288,10 @@ export default {
         // These are mentions in the first line of the description. For some reason, they are not classified as "mentioned" or "assigned"
         //this.getRemoteTasks({action: 'directly_addressed', state: 'pending', type: 'Issue'})
         // All the above are included in this call: pending TODOs
-        this.getRemoteTasks({state: 'pending', type: 'Issue'})
+        this.getRemoteTasks({state: 'pending', type: 'Issue', per_page: Config.PROJECTS_PER_PAGE})
         // not TODOs, but issues assinged to me. Some times this issues are not TODOs!
         // TODO: assigned-to-me is deprecated in gitlab>11. Use assigned_to_me instead
-        this.getRemoteTasks({scope: 'assigned-to-me', state: 'opened'}, GITLAB + '/api/v4/issues')
+        this.getRemoteTasks({scope: 'assigned-to-me', state: 'opened', per_page: Config.PROJECTS_PER_PAGE}, GITLAB + '/api/v4/issues')
       }
     },
 
