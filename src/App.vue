@@ -9,7 +9,7 @@
           v-model="showAlertMessage"
           :color="alertType"
           :timeout="6000"
-          top
+          bottom
           >
           {{ alertMessage}}
         </v-snackbar>
@@ -73,7 +73,7 @@
 
                 <issues-table :issues="issues" />
 
-                <report-bar @report-hours="reportHours" :total-hours-to-report="totalHoursToReport" />
+                <report-bar @report-hours="onReportHours" :total-hours-to-report="totalHoursToReport" />
               </v-card-text>
             </v-card>
           </v-tab-item>
@@ -113,7 +113,14 @@
             <v-card flat>
               <v-card-text>
                 <h2>Settings</h2>
-                <p>These values are stored locally in your browser's cache.</p>
+                <p>These params are stored locally in your browser's cache, not in any server.</p>
+                <v-text-field
+                  v-model="gitlab"
+                  label="URL to the gitlab server"
+                  hint="If empty, to not get issues and projects"
+                  @change="gitlabChanged"
+                  required
+                ></v-text-field>
                 <v-text-field
                   v-model="privateToken"
                   label="Gitlab private token"
@@ -126,6 +133,18 @@
                   v-model="showMilestones"
                   @change="showMilestonesChanged"
                 ></v-switch>
+                <v-switch
+                  label="Report hours to gitlab"
+                  v-model="reportHours"
+                  @change="reportHoursChanged"
+                ></v-switch>
+                <v-text-field
+                  v-model="emailReportWorkTime"
+                  label="Report working hours to this email"
+                  :hint="`If empty, do not report working hours`"
+                  required
+                  @change="emailReportWorkTimeChanged"
+                ></v-text-field>
               </v-card-text>
             </v-card>
           </v-tab-item>
@@ -156,8 +175,6 @@ require("@mdi/font/css/materialdesignicons.min.css")
 import 'basil.js'
 const axios = require('axios')
 
-const GITLAB = 'https://gitlab.incide.es'
-
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
 export default {
@@ -183,10 +200,13 @@ export default {
       currentUser: {name: 'NOT_LOGGED'}, // the user currently shown. For not admins, it is the same than loggedUser
       users: [],                // list of users
       showMilestones: true,
+      gitlab: '',               // URL to the gitlab server
       // manage alert messages
       showAlertMessage: false,
       alertMessage: null,
-      alertType: 'sucess',
+      alertType: 'success',
+      emailReportWorkTime: '',
+      reportHours: true,
       selectedProjectId: undefined // selected project id in the projects view
     }
   },
@@ -202,7 +222,7 @@ export default {
     },
 
     tokenURL() {
-      return `${GITLAB}/profile/personal_access_tokens`
+      return `${this.gitlab}/profile/personal_access_tokens`
     },
 
     maxTasks() {
@@ -215,58 +235,84 @@ export default {
     this.processedMilestones = []
 
     // get configuration
+    this.gitlab = basil.get('gitlab')
     this.showMilestones = basil.get('show-milestones')
     // get the last used token from the cache
     this.privateToken = basil.get('private-token')
-
+    // get whether we must report hours
+    this.reportHours = basil.get('report-hours')
+    if(this.reportHours === null) {
+      // by default: true
+      this.reportHours = true
+    }
+    // get email address to report work time. If not provided, time won't be reported
+    this.emailReportWorkTime = basil.get('email-report-work-time')
+    
     if(!this.privateToken) {
       // if there is not configuration stored, show the configuration tab
       this.activeTab = 'tab-config'
     } else {
       // if there is a token, load the user
+      this.activeTab = 'tab-reporter'
+    }
+  },
+
+  watch: {
+    privateToken: function (val) {
+      // if the token changes, load issues
       this.getTasks()
       this.getUser()
       this.getUsers()
-      this.activeTab = 'tab-reporter'
     }
   },
 
   methods: {
     gitlabURL() {
-      return `${GITLAB}/api/v4`
+      return `${this.gitlab}/api/v4`
     },
 
     showError(msg) {
+      this.showAlertMessage = true
       this.alertMessage = msg
       this.alertType = 'error'
     },
 
     showMessage(info) {
+      this.showAlertMessage = true
       this.alertMessage = info
       this.alertType = 'success'
     },
 
+    showWarning(info) {
+      this.showAlertMessage = true
+      this.alertMessage = info
+      this.alertType = 'warning'
+    },
+
     getUser () {
+      if(!this.gitlab) return
       // the the currently logged user
       let url = this.gitlabURL() + '/user'
       axios.get(url, {headers: {'Private-Token': this.privateToken}}).then( response => {
           this.loggedUser = response.data
           this.currentUser = this.loggedUser
         }).catch( () => {
-          this.showError(`Cannot connect to %{GITLAB}`)
+          this.showError(`Cannot connect to ${this.gitlab}`)
         })
     },
 
     getUsers () {
+      if(!this.gitlab) return
       // get available users. This method only works if we have an administrative token
-      axios.get(GITLAB + '/api/v4/users', {params: {'active': 'true'}, headers: {'Private-Token': this.privateToken}}).then( response => {
+      axios.get(this.gitlab + '/api/v4/users', {params: {'active': 'true'}, headers: {'Private-Token': this.privateToken}}).then( response => {
           this.users = response.data
         }).catch( () => {
-          this.showError(`Cannot connect to %{GITLAB}`)
+          this.showError(`Cannot connect to ${this.gitlab}`)
         })
     },
 
     getTasks () {
+      if(!this.gitlab) return
       // get issues and TODOs. This method resets arrays issues, calendarEvents and processedMilestones
       this.issues = []
       this.calendarEvents = []
@@ -291,17 +337,19 @@ export default {
         this.getRemoteTasks({state: 'pending', type: 'Issue', per_page: Config.PROJECTS_PER_PAGE})
         // not TODOs, but issues assinged to me. Some times this issues are not TODOs!
         // TODO: assigned-to-me is deprecated in gitlab>11. Use assigned_to_me instead
-        this.getRemoteTasks({scope: 'assigned-to-me', state: 'opened', per_page: Config.PROJECTS_PER_PAGE}, GITLAB + '/api/v4/issues')
+        this.getRemoteTasks({scope: 'assigned-to-me', state: 'opened', per_page: Config.PROJECTS_PER_PAGE}, this.gitlab + '/api/v4/issues')
       }
     },
 
     getRemoteTasks (params, url) {
+      if(!this.gitlab) return
+
       // Add TODOs (default) or ISSUES to the list
       // - params for the request. Check https://docs.gitlab.com/ce/api/issues.html or https://docs.gitlab.com/ce/api/todos.html
-      // - url for the request. Default: GITLAB + '/api/v4/todos'. Use also GITLAB + '/api/v4/issues'
+      // - url for the request. Default: this.gitlab + '/api/v4/todos'. Use also this.gitlab + '/api/v4/issues'
 
       if(url === undefined) {
-        url = GITLAB + '/api/v4/todos'
+        url = this.gitlab + '/api/v4/todos'
       }
       // Get issues as todos. This method does not reset issues or calendarEvents
       // these fields are appended to every issue:
@@ -333,7 +381,7 @@ export default {
           let url_tokens = issue.web_url.split('/')
           issue.project_name = url_tokens[4]
           issue.project_namespace = url_tokens[3] + '/' + url_tokens[4]
-          issue.project_url = GITLAB + '/' + issue.project_namespace
+          issue.project_url = this.gitlab + '/' + issue.project_namespace
 
           // timereported
           issue.report_hours = 0
@@ -367,43 +415,61 @@ export default {
           this.issues.push(issue)
         }
       }).catch( () => {
-        this.showError(`Cannot connect to %{GITLAB}`)
+        this.showError(`Cannot connect to ${this.gitlab}`)
       })
     },
 
-    reportHours (date) {
+    onReportHours ({date, morningStartTime, morningEndTime, eveningStartTime, eveningEndTime}) {
       /** report hours */
+      let reportBody = ''
       for(let i=0; i<this.issues.length; i++) {
         let issue = this.issues[i]
         let hoursToReport = parseFloat(issue.report_hours)
         let commentToReport = issue.report_comment
         if(!isNaN(hoursToReport) && hoursToReport > 0) {
           // create the report message
-          let spendTxt='/spend ' + hoursToReport + 'h ' + date;
+          let spendTxt='/spend ' + hoursToReport + 'h ' + date
+          let encodedComment = encodeURIComponent(commentToReport)
+          reportBody = `${reportBody}\nproject="${issue.project_id}" issue="${issue.iid}" spend="${spendTxt}" comment="${encodedComment}"`
           let explicitelyClosed = false
           if(commentToReport) {
             spendTxt = spendTxt + '\n' + commentToReport
             // if /done or /close is used, set the flag
             explicitelyClosed = (commentToReport.indexOf("/done") + commentToReport.indexOf("/close") !== -2)
-          }
+          }          
 
-          // report
-          let reportURL = '/api/v4/projects/' + issue.project_id + '/issues/' + issue.iid + '/notes'
-          axios.post(GITLAB + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( () => {
-            // comments that only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
-            // if we get a 200 response from the server, it was a real comment.
-            // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
-            // Unless the user explicitely used /done or /close, send a /todo to the issue.
-            if(!explicitelyClosed) {
-              axios.post(GITLAB + reportURL, {body: "/todo"}, {headers: {'Private-Token': this.privateToken}});
-              // the result from this POST command is ignored
-            }
-          }).catch( () => {
-            this.showError(`Cannot connect to %{GITLAB}`)
-          })
+          // report hours, only if a private toke is defined
+          if(this.reportHours) {
+            let reportURL = '/api/v4/projects/' + issue.project_id + '/issues/' + issue.iid + '/notes'
+            axios.post(this.gitlab + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( () => {
+              // comments that only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
+              // if we get a 200 response from the server, it was a real comment.
+              // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
+              // Unless the user explicitely used /done or /close, send a /todo to the issue.
+              if(!explicitelyClosed) {
+                axios.post(this.gitlab + reportURL, {body: "/todo"}, {headers: {'Private-Token': this.privateToken}});
+                // the result from this POST command is ignored
+              }
+            }).catch( () => {
+              this.showError(`Cannot connect to ${this.gitlab}`)
+            })
+          } else {
+            this.showWarning('Hours won\'t be reported to gitlab')
+          }
         }
         issue.report_hours = 0;
         issue.report_comment = '';
+      }
+
+      /** report work times */
+      if(this.emailReportWorkTime) {
+        let subject = encodeURIComponent(`${date} ${morningStartTime}-${morningEndTime},${eveningStartTime}-${eveningEndTime}`)
+        let body = encodeURIComponent(reportBody)
+        if(body) {
+          window.open(`mailto:${this.emailReportWorkTime}?subject=${subject}&body=${body}`)
+        } else {
+          window.open(`mailto:${this.emailReportWorkTime}?subject=${subject}`)
+        }
       }
     },
 
@@ -413,13 +479,19 @@ export default {
     },
 
     tokenChanged(token) {
-      // when a new token is configured, load issues
       this.privateToken = token
       basil.set('private-token', this.privateToken)
-      this.getTasks()
-      this.getUser()
-      this.getUsers()
-      this.activeTab = 'tab-reporter'
+    },
+
+    gitlabChanged(gitlab) {
+      this.gitlab = gitlab
+      basil.set('gitlab', this.gitlab)
+    },
+
+    emailReportWorkTimeChanged(email) {
+      // the reporting mail address was changed
+      this.emailReportWorkTime = email
+      basil.set('email-report-work-time', this.emailReportWorkTime)
     },
 
     showMilestonesChanged() {
@@ -427,6 +499,12 @@ export default {
       // TODO: do not reload issues for this
       basil.set('show-milestones', this.showMilestones)
       this.getTasks()
+    },
+
+    reportHoursChanged() {
+      // show/hide milestones.
+      // TODO: do not reload issues for this
+      basil.set('report-hours', this.reportHours)
     },
 
     changeUser(user) {

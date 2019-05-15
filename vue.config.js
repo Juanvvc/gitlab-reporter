@@ -1,6 +1,6 @@
 module.exports = {
   // options...
-  baseUrl: process.env.NODE_ENV === 'production' ? './' : '/',
+  publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
 
   // Other options include:
   outputDir: undefined,

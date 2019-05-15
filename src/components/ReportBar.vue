@@ -50,7 +50,7 @@ Events:
       <v-spacer></v-spacer>
       <v-flex>
         <v-btn
-            @click.native="$emit('report-hours', date)"
+            @click.native="$emit('report-hours', {date, morningStartTime, morningEndTime, eveningStartTime, eveningEndTime})"
             color="primary"
             dark >
             Report
