@@ -63,6 +63,8 @@
               <v-card-text>
                 <h2>Pending Todos</h2>
 
+                <p>User: {{ currentUser.name }}. Server: {{ gitlab }}</p>
+
                 <p>This list includes issues assigned to you and issues where you are mentioned.</p>
 
                 <p>Number of tasks: {{ issues.length }}</p>
@@ -113,12 +115,15 @@
             <v-card flat>
               <v-card-text>
                 <h2>Settings</h2>
-                <p>These params are stored locally in your browser's cache, not in any server.</p>
+                <p>
+                  These parameters are stored locally in your browser's cache, not in any server.
+                  You must reload the page after changing any of these parameters.
+                </p>
                 <v-text-field
                   v-model="gitlab"
                   label="URL to the gitlab server"
                   hint="If empty, to not get issues and projects"
-                  @change="gitlabChanged"
+                  @change="configChanged"
                   required
                 ></v-text-field>
                 <v-text-field
@@ -126,24 +131,24 @@
                   label="Gitlab private token"
                   :hint="`Get the token from ${tokenURL}`"
                   required
-                  @change="tokenChanged"
+                  @change="configChanged"
                 ></v-text-field>
                 <v-switch
                   label="Calendar: show milestones"
                   v-model="showMilestones"
-                  @change="showMilestonesChanged"
+                  @change="configChanged"
                 ></v-switch>
                 <v-switch
                   label="Report hours to gitlab"
                   v-model="reportHours"
-                  @change="reportHoursChanged"
+                  @change="configChanged"
                 ></v-switch>
                 <v-text-field
                   v-model="emailReportWorkTime"
                   label="Report working hours to this email"
-                  :hint="`If empty, do not report working hours`"
+                  hint="If empty, do not report working hours"
                   required
-                  @change="emailReportWorkTimeChanged"
+                  @change="configChanged"
                 ></v-text-field>
               </v-card-text>
             </v-card>
@@ -247,23 +252,10 @@ export default {
     }
     // get email address to report work time. If not provided, time won't be reported
     this.emailReportWorkTime = basil.get('email-report-work-time')
-    
-    if(!this.privateToken) {
-      // if there is not configuration stored, show the configuration tab
-      this.activeTab = 'tab-config'
-    } else {
-      // if there is a token, load the user
-      this.activeTab = 'tab-reporter'
-    }
-  },
 
-  watch: {
-    privateToken: function (val) {
-      // if the token changes, load issues
-      this.getTasks()
-      this.getUser()
-      this.getUsers()
-    }
+    this.getTasks()
+    this.getUser()
+    this.getUsers()
   },
 
   methods: {
@@ -271,49 +263,40 @@ export default {
       return `${this.gitlab}/api/v4`
     },
 
-    showError(msg) {
-      this.showAlertMessage = true
-      this.alertMessage = msg
-      this.alertType = 'error'
-    },
-
-    showMessage(info) {
+    showMessage(info, type='success') {
       this.showAlertMessage = true
       this.alertMessage = info
-      this.alertType = 'success'
-    },
-
-    showWarning(info) {
-      this.showAlertMessage = true
-      this.alertMessage = info
-      this.alertType = 'warning'
+      this.alertType = type
     },
 
     getUser () {
-      if(!this.gitlab) return
-      // the the currently logged user
+      // get the the currently logged user
+
+      if(!this.gitlab || !this.privateToken) return
       let url = this.gitlabURL() + '/user'
       axios.get(url, {headers: {'Private-Token': this.privateToken}}).then( response => {
           this.loggedUser = response.data
           this.currentUser = this.loggedUser
         }).catch( () => {
-          this.showError(`Cannot connect to ${this.gitlab}`)
+          this.showMessage(`Cannot connect to ${this.gitlab}`, 'error')
         })
     },
 
     getUsers () {
-      if(!this.gitlab) return
       // get available users. This method only works if we have an administrative token
+
+      if(!this.gitlab) return
       axios.get(this.gitlab + '/api/v4/users', {params: {'active': 'true'}, headers: {'Private-Token': this.privateToken}}).then( response => {
           this.users = response.data
         }).catch( () => {
-          this.showError(`Cannot connect to ${this.gitlab}`)
+          this.showMessage(`Cannot connect to ${this.gitlab}`, 'error')
         })
     },
 
     getTasks () {
-      if(!this.gitlab) return
       // get issues and TODOs. This method resets arrays issues, calendarEvents and processedMilestones
+
+      if(!this.gitlab || !this.privateToken) return
       this.issues = []
       this.calendarEvents = []
       this.processedMilestones = []
@@ -342,7 +325,7 @@ export default {
     },
 
     getRemoteTasks (params, url) {
-      if(!this.gitlab) return
+      if(!this.gitlab || !this.privateToken) return
 
       // Add TODOs (default) or ISSUES to the list
       // - params for the request. Check https://docs.gitlab.com/ce/api/issues.html or https://docs.gitlab.com/ce/api/todos.html
@@ -415,7 +398,7 @@ export default {
           this.issues.push(issue)
         }
       }).catch( () => {
-        this.showError(`Cannot connect to ${this.gitlab}`)
+        this.showMessage(`Cannot connect to ${this.gitlab}`, 'error')
       })
     },
 
@@ -451,14 +434,16 @@ export default {
                 // the result from this POST command is ignored
               }
             }).catch( () => {
-              this.showError(`Cannot connect to ${this.gitlab}`)
+              this.showMessage(`Cannot connect to ${this.gitlab}`, 'error')
             })
-          } else {
-            this.showWarning('Hours won\'t be reported to gitlab')
           }
         }
         issue.report_hours = 0;
         issue.report_comment = '';
+      }
+
+      if(!this.reportHours) {
+        this.showMessage('Hours won\'t be reported to gitlab', 'warning')
       }
 
       /** report work times */
@@ -478,32 +463,12 @@ export default {
       this.calendarDate = d;
     },
 
-    tokenChanged(token) {
-      this.privateToken = token
+    configChanged() {
+      // the configuration was changed: save new values
       basil.set('private-token', this.privateToken)
-    },
-
-    gitlabChanged(gitlab) {
-      this.gitlab = gitlab
       basil.set('gitlab', this.gitlab)
-    },
-
-    emailReportWorkTimeChanged(email) {
-      // the reporting mail address was changed
-      this.emailReportWorkTime = email
       basil.set('email-report-work-time', this.emailReportWorkTime)
-    },
-
-    showMilestonesChanged() {
-      // show/hide milestones.
-      // TODO: do not reload issues for this
       basil.set('show-milestones', this.showMilestones)
-      this.getTasks()
-    },
-
-    reportHoursChanged() {
-      // show/hide milestones.
-      // TODO: do not reload issues for this
       basil.set('report-hours', this.reportHours)
     },
 
