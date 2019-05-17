@@ -42,10 +42,10 @@ Events:
       </v-flex>
       <v-spacer></v-spacer>
       <v-flex>
-        Total hours to report: {{ Number(totalHoursToReport).toFixed(2) }}.
+        Total hours to report: <strong>{{ Number(totalHoursToReport).toFixed(2) }}</strong>.
       </v-flex>
       <v-flex>
-        Total work hours: {{ workHours }}.
+        Total work hours: <strong>{{ Number(workHours).toFixed(2) }}</strong>.
       </v-flex>
       <v-spacer></v-spacer>
       <v-flex>
@@ -72,13 +72,15 @@ Events:
           max-width="290px"
           min-width="290px"
         >
-          <v-text-field
-            slot="activator"
-            v-model="morningStartTime"
-            label="Morning start time"
-            prepend-icon="mdi-clock-in"
-            readonly
-          ></v-text-field>
+          <template v-slot:activator="{ on }">
+            <v-text-field
+              v-model="morningStartTime"
+              label="Morning start time"
+              :prepend-icon="clockInIcon"
+              readonly
+              v-on="on"
+            ></v-text-field>
+          </template>
           <v-time-picker
             v-if="morningStartTimeMenu"
             v-model="morningStartTime"
@@ -103,13 +105,15 @@ Events:
           max-width="290px"
           min-width="290px"
         >
-          <v-text-field
-            slot="activator"
-            v-model="morningEndTime"
-            label="Morning end time"
-            prepend-icon="mdi-clock-out"
-            readonly
-          ></v-text-field>
+          <template v-slot:activator="{ on }">
+            <v-text-field
+              v-model="morningEndTime"
+              label="Morning end time"
+              :prepend-icon="clockOutIcon"
+              readonly
+              v-on="on"
+            ></v-text-field>
+          </template>
           <v-time-picker
             v-if="morningEndTimeMenu"
             v-model="morningEndTime"
@@ -134,13 +138,15 @@ Events:
           max-width="290px"
           min-width="290px"
         >
-          <v-text-field
-            slot="activator"
-            v-model="eveningStartTime"
-            label="Evening start time"
-            prepend-icon="mdi-clock-in"
-            readonly
-          ></v-text-field>
+          <template v-slot:activator="{ on }">
+            <v-text-field
+              v-model="eveningStartTime"
+              label="Evening start time"
+              :prepend-icon="clockInIcon"
+              readonly
+              v-on="on"
+            ></v-text-field>
+          </template>
           <v-time-picker
             v-if="eveningStartTimeMenu"
             v-model="eveningStartTime"
@@ -169,7 +175,7 @@ Events:
             <v-text-field
               v-model="eveningEndTime"
               label="Evening end time"
-              prepend-icon="mdi-clock-out"
+              :prepend-icon="clockOutIcon"
               readonly
               v-on="on"
             ></v-text-field>
@@ -218,7 +224,23 @@ export default {
   computed: {
     workHours () {
       let s = moment(this.morningEndTime, 'HH:mm') - moment(this.morningStartTime, 'HH:mm') + moment(this.eveningEndTime, 'HH:mm') - moment(this.eveningStartTime, 'HH:mm')
-      return Number(s / 1000 / 60 / 60).toFixed(2)
+      return s / 1000 / 60 / 60
+    },
+
+    clockInIcon () {
+      // Show icons only on large screens
+      switch (this.$vuetify.breakpoint.name) {
+        case 'md': case 'lg': case 'xl': return 'mdi-clock-in'
+      }
+      return ''
+    },
+
+    clockOutIcon () {
+      // Show icons only on large screens
+      switch (this.$vuetify.breakpoint.name) {
+        case 'md': case 'lg': case 'xl': return 'mdi-clock-out'
+      }
+      return ''
     }
   }
 }

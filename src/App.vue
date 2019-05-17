@@ -17,7 +17,7 @@
         <v-toolbar app dark color="primary darken-2">
           <v-toolbar-title>
             <v-layout row align-center>
-              Task viewer and reporter for:&nbsp;&nbsp;
+              GitLab reporter for:&nbsp;&nbsp;
               <span v-if="loggedUser.is_admin">
                 <v-select
                   :items="users"
@@ -63,11 +63,17 @@
               <v-card-text>
                 <h2>Pending Todos</h2>
 
-                <p>User: {{ currentUser.name }}. Server: {{ gitlab }}</p>
+                <p class="caption">
+                  User: <strong>{{ currentUser.name }}</strong>.
+                  Server: <strong>{{ gitlab }}</strong>.
+                  Reporting email: <strong>{{ emailReportWorkTime }}</strong>.
+                  Report to GitLab: <strong>{{ reportHours }}</strong>.
+                </p>
 
-                <p>This list includes issues assigned to you and issues where you are mentioned.</p>
-
-                <p>Number of tasks: {{ issues.length }}</p>
+                <v-tooltip top>
+                  <p slot="activator">Number of tasks: {{ issues.length }}.</p>
+                  <span>This list includes issues assigned to you and issues where you are mentioned.</span>
+                </v-tooltip>
 
                 <v-alert v-if="issues.length >= maxTasks" type="warning">
                   At most, only {{maxTasks}} random issues are shown. Do you really have more than {{maxTasks}} open issues?
