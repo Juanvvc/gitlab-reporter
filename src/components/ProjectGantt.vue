@@ -5,6 +5,7 @@
 <script>
 
 const axios = require('axios')
+import Console from '@/lib/Console.js'
 import Gantt from 'frappe-gantt'
 
 export default {
@@ -40,7 +41,7 @@ export default {
     async downloadProjectInfo (projectId) {
       let tasks = []
       let milestones = await this.downloadMilestones(projectId)
-      console.log(JSON.stringify(milestones))
+      Console.log(JSON.stringify(milestones))
       for(let i = 0; i<milestones.length; i++) {
         let issues = await this.downloadIssues(milestones[i]._id)
         let current_progress = 0
@@ -64,7 +65,7 @@ export default {
     },
 
     async downloadMilestones (projectId) {
-      return axios.get(`${this.url}/${this.projectId}/milestones`, {headers: {'Private-Token': this.token}})
+      return axios.get(`${this.url}/${projectId}/milestones`, {headers: {'Private-Token': this.token}})
         .then(response => {
           return response.data.map( m => {
             return {
