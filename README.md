@@ -2,8 +2,8 @@
 
 An interface for Gitlab:
 
-- Easily report hours
-- Show a calendar with open issues and their milestones
+- Easily report hours to the projects you participate.
+- Show a calendar with issues, todos and milestones.
 
 ## Build Setup
 
