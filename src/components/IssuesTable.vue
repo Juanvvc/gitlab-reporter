@@ -35,24 +35,19 @@ Shows a table with information about issues
       </template>
     </v-data-table>
 
-    <v-dialog v-if="showReportDialog" v-model="showReportDialog" max-width="600px" persistent>
-      <v-card>
-        <v-card-title><span class="headline">Report to "{{selectedIssue.project_name}} - {{selectedIssue.title}}"</span></v-card-title>
-        <v-card-text>
-          <v-text-field label="Hours to report" hint="Use only float numbers" v-model="selectedIssue.report_hours" autofocus></v-text-field>
-          <v-textarea label="Optional comment" hint="Comments can include quick actions, such as /done or /close" v-model="selectedIssue.report_comment"></v-textarea>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" flat @click.native="showReportDialog=false">OK</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <edit-data-dialog ref="editDataDialog" />
   </div>
 </template>
 
 <script>
+
+import EditDataDialog from './EditDataDialog.vue'
+
 export default {
+  components: {
+    EditDataDialog
+  },
+
   props: {
     issues: {    // issues, as returned by gitlab (see getIssues for some extra fields)
       required: true,
@@ -72,14 +67,24 @@ export default {
           { text: 'Today', value: 'report', sortable: false }
       ],
       selectedIssue: null,
-      showReportDialog: false
     }
   },
 
   methods: {
-    editReport (issue) {
-      this.selectedIssue = issue;
-      this.showReportDialog = true;
+    async editReport (issue) {
+      let params = {
+        title: `Report to "${issue.project_name} - ${issue.title}"`,
+        fields: [
+          {label: 'Hours to report', name: 'report_hours', value: issue.report_hours, type: 'textfield', hint: 'Hours using a float number'},
+          {label: 'Optional comment', name: 'report_comment', value: issue.report_comment, type: 'textarea', hint: 'Comments can include quick actions, such as /done or /close'},
+        ]
+      }
+
+      let newMetadata = await this.$refs.editDataDialog.edit(params)
+      if(newMetadata) {
+        issue.report_hours = newMetadata.report_hours
+        issue.report_comment = newMetadata.report_comment
+      }
     }
   }
 }
