@@ -419,12 +419,14 @@ export default {
         if(!isNaN(hoursToReport) && hoursToReport > 0) {
           // create the report message
           let spendTxt='/spend ' + hoursToReport + 'h ' + date
+          // this will the appended to the mail body
           let encodedComment = encodeURIComponent(commentToReport)
-          reportBody = `${reportBody}\nproject="${issue.project_id}" issue="${issue.iid}" spend="${spendTxt}" comment="${encodedComment}"`
+          reportBody = `${reportBody}\nproject="${issue.project_id}" project_name="${issue.project_name}" issue="${issue.iid}" title="${issue.title}" spend="${spendTxt}" comment="${encodedComment}"`
+          // Append the comment fo the reporting text, if any
           let explicitelyClosed = false
           if(commentToReport) {
             spendTxt = spendTxt + '\n' + commentToReport
-            // if /done or /close is used, set the flag
+            // if /done or /close is used, set the explicitelyClose flag
             explicitelyClosed = (commentToReport.indexOf("/done") + commentToReport.indexOf("/close") !== -2)
           }          
 
