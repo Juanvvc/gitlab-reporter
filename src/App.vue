@@ -16,24 +16,31 @@
 
         <v-toolbar app dark color="primary darken-2">
           <v-toolbar-title>
-            <v-layout row align-center>
-              GitLab reporter for:&nbsp;&nbsp;
-              <span v-if="loggedUser.is_admin">
-                <v-select
-                  :items="users"
-                  v-model="currentUser"
-                  @change="changeUser"
-                >
-                  <template slot="item" slot-scope="prop">
-                    {{ prop.item.name }}
-                  </template>
-                  <template slot="selection" slot-scope="prop">
-                    {{ prop.item.name }}
-                  </template>
-                </v-select>
-              </span>
-              <span v-else>
-                {{ currentUser.name }}
+            <v-layout column>
+              <v-layout row align-center>
+                GitLab reporter for:&nbsp;&nbsp;
+                <span v-if="loggedUser.is_admin">
+                  <v-select
+                    :items="users"
+                    v-model="currentUser"
+                    @change="changeUser"
+                  >
+                    <template slot="item" slot-scope="prop">
+                      {{ prop.item.name }}
+                    </template>
+                    <template slot="selection" slot-scope="prop">
+                      {{ prop.item.name }}
+                    </template>
+                  </v-select>
+                </span>
+                <span v-else>
+                  {{ currentUser.name }}
+                </span>
+              </v-layout>
+              <span class="caption">
+                Server: <strong>{{ gitlab }}</strong>.
+                Reporting email: <strong>{{ emailReportWorkTime }}</strong>.
+                Report to GitLab: <strong>{{ reportHours }}</strong>.
               </span>
             </v-layout>
           </v-toolbar-title>
@@ -61,14 +68,7 @@
           <v-tab-item value="tab-reporter">
             <v-card flat>
               <v-card-text>
-                <h2>Pending Todos</h2>
-
-                <p class="caption">
-                  User: <strong>{{ currentUser.name }}</strong>.
-                  Server: <strong>{{ gitlab }}</strong>.
-                  Reporting email: <strong>{{ emailReportWorkTime }}</strong>.
-                  Report to GitLab: <strong>{{ reportHours }}</strong>.
-                </p>
+                <h2>Open issues and TODOs for {{ currentUser.name }}</h2>
 
                 <v-tooltip top>
                   <p slot="activator">Number of tasks: {{ issues.length }}.</p>
@@ -79,7 +79,7 @@
                   At most, only {{maxTasks}} random issues are shown. Do you really have more than {{maxTasks}} open issues?
                 </v-alert>
 
-                <issues-table :issues="issues" />
+                <issues-table :issues="issues" :loading="loading" />
 
                 <report-bar @report-hours="onReportHours" :total-hours-to-report="totalHoursToReport" />
               </v-card-text>
@@ -211,6 +211,7 @@ export default {
       currentUser: {name: 'NOT_LOGGED'}, // the user currently shown. For not admins, it is the same than loggedUser
       users: [],                // list of users
       showMilestones: true,
+      loading: false,
       gitlab: '',               // URL to the gitlab server
       // manage alert messages
       showAlertMessage: false,

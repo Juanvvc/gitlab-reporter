@@ -10,6 +10,7 @@ Shows a table with information about issues
       :items="issues"
       :headers="headers"
       :must-sort="true"
+      :loading="loading"
       hide-actions
     >
       <template slot="items" slot-scope="props">
@@ -52,6 +53,10 @@ export default {
     issues: {    // issues, as returned by gitlab (see getIssues for some extra fields)
       required: true,
       type: Array
+    },
+    loading: {
+      required: true,
+      type: Boolean
     }
   },
 
