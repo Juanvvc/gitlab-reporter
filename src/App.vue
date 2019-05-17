@@ -411,7 +411,7 @@ export default {
 
     onReportHours ({date, morningStartTime, morningEndTime, eveningStartTime, eveningEndTime}) {
       /** report hours */
-      let reportBody = ''
+      let reportBody = []
       for(let i=0; i<this.issues.length; i++) {
         let issue = this.issues[i]
         let hoursToReport = parseFloat(issue.report_hours)
@@ -420,8 +420,16 @@ export default {
           // create the report message
           let spendTxt='/spend ' + hoursToReport + 'h ' + date
           // this will the appended to the mail body
-          let encodedComment = encodeURIComponent(commentToReport)
-          reportBody = `${reportBody}\nproject="${issue.project_id}" project_name="${issue.project_name}" issue="${issue.iid}" title="${issue.title}" spend="${spendTxt}" comment="${encodedComment}"`
+          reportBody.push(
+            {
+              project_id: issue.project_id,
+              project_name: issue.project_name,
+              iid: issue.iid,
+              title: issue.title,
+              spendTxt: spendTxt,
+              comment: commentToReport
+            }
+          )
           // Append the comment fo the reporting text, if any
           let explicitelyClosed = false
           if(commentToReport) {
@@ -458,7 +466,7 @@ export default {
       /** report work times */
       if(this.emailReportWorkTime) {
         let subject = encodeURIComponent(`${date} ${morningStartTime}-${morningEndTime},${eveningStartTime}-${eveningEndTime}`)
-        let body = encodeURIComponent(reportBody)
+        let body = encodeURIComponent(JSON.stringify(reportBody, null, 4))
         if(body) {
           window.open(`mailto:${this.emailReportWorkTime}?subject=${subject}&body=${body}`)
         } else {
