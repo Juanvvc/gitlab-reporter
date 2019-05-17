@@ -16,10 +16,10 @@ Shows a table with information about issues
         <tr>
           <td><a :href="props.item.project_url" target="_blank">{{ props.item.project_name }}</a></td>
           <td><a :href="props.item.web_url" target="_blank">{{ props.item.title }}</a></td>
-          <td>{{ props.item.due_date }}</td>
-          <td>{{ props.item.assignee_names }}</td>
-          <td>{{ props.item.time_stats.human_time_estimate }}</td>
-          <td>{{ props.item.time_stats.human_total_time_spent }}</td>
+          <td class="hidden-sm-and-down">{{ props.item.due_date }}</td>
+          <td class="hidden-sm-and-down">{{ props.item.assignee_names }}</td>
+          <td class="hidden-sm-and-down">{{ props.item.time_stats.human_time_estimate }}</td>
+          <td class="hidden-sm-and-down">{{ props.item.time_stats.human_total_time_spent }}</td>
           <td>
             <v-layout row align-center>
               <v-tooltip bottom>
@@ -65,10 +65,10 @@ export default {
       headers: [
           { text: 'Project', value: 'project_name', sortable: true },
           { text: 'Title', value: 'title', sortable: true},
-          { text: 'Due date', value: 'due_date', sortable: true},
-          { text: 'Assignees', value: 'assignees', sortable: false },
-          { text: 'Estimated', value: 'estimated', sortable: false },
-          { text: 'Spent', value: 'spent', sortable: false },
+          { text: 'Due date', value: 'due_date', sortable: true, class: 'hidden-sm-and-down'},
+          { text: 'Assignees', value: 'assignees', sortable: false, class: 'hidden-sm-and-down' },
+          { text: 'Estimated', value: 'estimated', sortable: false, class: 'hidden-sm-and-down' },
+          { text: 'Spent', value: 'spent', sortable: false, class: 'hidden-sm-and-down' },
           { text: 'Today', value: 'report', sortable: false }
       ],
       selectedIssue: null,
