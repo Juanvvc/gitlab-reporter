@@ -50,7 +50,7 @@ Events:
       <v-spacer></v-spacer>
       <v-flex>
         <v-btn
-            @click.native="$emit('report-hours', {date, morningStartTime, morningEndTime, eveningStartTime, eveningEndTime})"
+            @click.native="$emit('report-hours', {date})"
             color="primary"
             dark >
             Report
@@ -63,15 +63,10 @@ Events:
 <script>
 
 import moment from 'moment'
+import { mapState } from 'vuex'
+
 
 export default {
-  props: {
-    totalHoursToReport: {
-      type: Number,
-      required: true
-    }
-  },
-
   data () {
     return {
       date: moment().format('YYYY-MM-DD'),
@@ -80,9 +75,20 @@ export default {
   },
 
   computed: {
+    totalHoursToReport () {
+      // get the total number of hours to be reported now
+      let rh = 0;
+      for(let i=0; i<this.issues.length; i++) {
+        rh += parseFloat(this.issues[i].report_hours);
+      }
+      return rh;
+    },
+
     workHours () {
       return 8
     },
+
+    ...mapState(['issues'])
   }
 }
 </script>

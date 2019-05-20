@@ -61,7 +61,7 @@
 
           <v-tab href="#tab-reporter">Reporter<v-icon>mdi-account-clock</v-icon></v-tab>
           <v-tab href="#tab-calendar">Calendar<v-icon>calendar_today</v-icon></v-tab>
-          <v-tab href="#tab-gantt">Gantt<v-icon>mdi-file-tree</v-icon></v-tab>
+          <!--v-tab href="#tab-gantt">Gantt<v-icon>mdi-file-tree</v-icon></v-tab-->
           <v-tab href="#tab-config">Settings<v-icon>settings</v-icon></v-tab>
         </v-tabs>
 
@@ -81,9 +81,9 @@
                   At most, only {{maxTasks}} random issues are shown. Do you really have more than {{maxTasks}} open issues?
                 </v-alert>
 
-                <issues-table :issues="issues" :loading="loading" />
+                <issues-table />
 
-                <report-bar @report-hours="onReportHours" :total-hours-to-report="totalHoursToReport" />
+                <report-bar @report-hours="$store.dispatch('reportHours', $event)" />
               </v-card-text>
             </v-card>
           </v-tab-item>
@@ -110,13 +110,13 @@
           </v-tab-item>
 
           <!-- Gantt -->
-          <v-tab-item value="tab-gantt">
-            <!--v-card flat height="800px">
+          <!--v-tab-item value="tab-gantt">
+            <v-card flat height="800px">
               <h2>Gantt</h2>
-              <search-project :token="privateToken" :url="gitlabURL + '/projects'" @change="selectedProjectId = arguments[0]"/>
-              <project-gantt :token="privateToken" :projectId="selectedProjectId" :url="gitlabURL + '/projects'" />
-            </v-card-->
-          </v-tab-item>
+              <search-project :url="gitlabURL + '/projects'" @change="selectedProjectId = arguments[0]"/>
+              <project-gantt :projectId="selectedProjectId" :url="gitlabURL + '/projects'" />
+            </v-card>
+          </v-tab-item-->
 
           <!-- config -->
           <v-tab-item value="tab-config">
@@ -147,8 +147,6 @@ import { mapState } from 'vuex'
 require("vue-simple-calendar/static/css/default.css")
 require("@mdi/font/css/materialdesignicons.min.css")
 
-const axios = require('axios')
-
 export default {
   name: 'app',
 
@@ -176,15 +174,6 @@ export default {
   },
 
   computed: {
-    totalHoursToReport () {
-      // get the total number of hours to be reported now
-      let rh = 0;
-      for(let i=0; i<this.issues.length; i++) {
-        rh += parseFloat(this.issues[i].report_hours);
-      }
-      return rh;
-    },
-
     gitlabURL() {
       return `${this.gitlab}/api/v4`
     },
@@ -193,7 +182,7 @@ export default {
       return Config.PROJECTS_PER_PAGE
     },
 
-    ...mapState(['loading', 'loggedUser', 'currentUser', 'issues', 'emailReportHours', 'emailSessionTime', 'gitlab', 'reportHours', 'calendarEvents'])
+    ...mapState(['loggedUser', 'currentUser', 'issues', 'emailReportHours', 'emailSessionTime', 'gitlab', 'reportHours', 'calendarEvents'])
   },
 
   created () {
@@ -208,72 +197,6 @@ export default {
       this.showAlertMessage = true
       this.alertMessage = info
       this.alertType = type
-    },
-
-    onReportHours ({date, morningStartTime, morningEndTime, eveningStartTime, eveningEndTime}) {
-      /** report hours */
-      let reportBody = []
-      for(let i=0; i<this.issues.length; i++) {
-        let issue = this.issues[i]
-        let hoursToReport = parseFloat(issue.report_hours)
-        let commentToReport = issue.report_comment
-        if(!isNaN(hoursToReport) && hoursToReport > 0) {
-          // create the report message
-          let spendTxt='/spend ' + hoursToReport + 'h ' + date
-          // this will the appended to the mail body
-          reportBody.push(
-            {
-              project_id: issue.project_id,
-              project_name: issue.project_name,
-              iid: issue.iid,
-              title: issue.title,
-              spendTxt: spendTxt,
-              comment: commentToReport
-            }
-          )
-          // Append the comment fo the reporting text, if any
-          let explicitelyClosed = false
-          if(commentToReport) {
-            spendTxt = spendTxt + '\n' + commentToReport
-            // if /done or /close is used, set the explicitelyClose flag
-            explicitelyClosed = (commentToReport.indexOf("/done") + commentToReport.indexOf("/close") !== -2)
-          }          
-
-          // report hours, only if a private toke is defined
-          if(this.reportHours) {
-            let reportURL = '/api/v4/projects/' + issue.project_id + '/issues/' + issue.iid + '/notes'
-            axios.post(this.gitlab + reportURL, {body: spendTxt}, {headers: {'Private-Token': this.privateToken}}).then( () => {
-              // comments that only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
-              // if we get a 200 response from the server, it was a real comment.
-              // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
-              // Unless the user explicitely used /done or /close, send a /todo to the issue.
-              if(!explicitelyClosed) {
-                axios.post(this.gitlab + reportURL, {body: "/todo"}, {headers: {'Private-Token': this.privateToken}});
-                // the result from this POST command is ignored
-              }
-            }).catch( () => {
-              this.showMessage(`Cannot connect to ${this.gitlab}`, 'error')
-            })
-          }
-        }
-        issue.report_hours = 0;
-        issue.report_comment = '';
-      }
-
-      if(!this.reportHours) {
-        this.showMessage('Hours won\'t be reported to gitlab', 'warning')
-      }
-
-      /** report work times */
-      if(this.emailReportHours) {
-        let subject = encodeURIComponent(`${date} ${morningStartTime}-${morningEndTime},${eveningStartTime}-${eveningEndTime}`)
-        let body = encodeURIComponent(JSON.stringify(reportBody, null, 4))
-        if(body) {
-          window.open(`mailto:${this.emailReportHours}?subject=${subject}&body=${body}`)
-        } else {
-          window.open(`mailto:${this.emailReportHours}?subject=${subject}`)
-        }
-      }
     },
 
     setCalendarDate(d) {

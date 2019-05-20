@@ -3,7 +3,7 @@ import Vuex from 'vuex'
 import axios from 'axios'
 import 'basil.js'
 import Config from '@/lib/config.js'
-//import Console from '@/lib/Console.js'
+import Console from '@/lib/Console.js'
 
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
@@ -65,6 +65,10 @@ let mutations = {
     state.issues = newValue
   },
 
+  editIssue(state, {issueIndex, newMetadata}) {
+    state.issues.splice(issueIndex, 1, Object.assign({}, state.issues[issueIndex], newMetadata))
+  },
+
   calendarEvents(state, {calendarEvents, milestones}) {
     state.calendarEvents = calendarEvents
     state.milestones = milestones
@@ -95,12 +99,11 @@ let mutations = {
 }
 
 async function getRemoteTasks ({gitlab, privateToken, params, url}) {
-  if(!gitlab || !privateToken) return []
-
   // Add TODOs (default) or ISSUES to the list
   // - params for the request. Check https://docs.gitlab.com/ce/api/issues.html or https://docs.gitlab.com/ce/api/todos.html
   // - url for the request. Default: gitlab + '/api/v4/todos'. Use also gitlab + '/api/v4/issues'
 
+  if(!gitlab || !privateToken) return []
   if(url === undefined) {
     url = `${state.gitlab}/api/v4/todos`
   }
@@ -137,6 +140,7 @@ async function getRemoteTasks ({gitlab, privateToken, params, url}) {
 }
 
 function createCalendarEvents(issues) {
+  // Create calendar events from an issue array
   let calendarEvents = []
   let milestones = []
   for(let i=0; i<issues.length; i++) {
@@ -172,6 +176,7 @@ function createCalendarEvents(issues) {
 }
 
 function addIssues(issues, newIssues) {
+  // Add newIssues to the issues array, only if they are not already there
   if(!newIssues) return
   let newIssue = false
   for(let i=0; i<newIssues.length; i++) {
@@ -263,6 +268,66 @@ let actions = {
     commit('issues', issues)
     commit('calendarEvents', calendar)
     commit('loading', false)
+  },
+
+  async reportHours ({commit, state}, {date}) {
+    /** report hours */
+    let reportBody = []
+    for(let i=0; i<state.issues.length; i++) {
+      let issue = state.issues[i]
+      let hoursToReport = parseFloat(issue.report_hours)
+      let commentToReport = issue.report_comment
+      if(!isNaN(hoursToReport) && hoursToReport > 0) {
+        // create the report message
+        let spendTxt='/spend ' + hoursToReport + 'h ' + date
+        // this will the appended to the mail body
+        reportBody.push(
+          {
+            project_id: issue.project_id,
+            project_name: issue.project_name,
+            iid: issue.iid,
+            title: issue.title,
+            spendTxt: spendTxt,
+            comment: commentToReport
+          }
+        )
+        // Append the comment fo the reporting text, if any
+        let explicitelyClosed = false
+        if(commentToReport) {
+          spendTxt = spendTxt + '\n' + commentToReport
+          // if /done or /close is used, set the explicitelyClose flag
+          explicitelyClosed = (commentToReport.indexOf("/done") + commentToReport.indexOf("/close") !== -2)
+        }          
+
+        // report hours to gitlab, if active
+        if(state.reportHours) {
+          let reportURL = '/api/v4/projects/' + issue.project_id + '/issues/' + issue.iid + '/notes'
+          let response = await axios.post(state.gitlab + reportURL, {body: spendTxt}, {headers: {'Private-Token': state.privateToken}})
+          if(response) {
+            // comments that only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
+            // if we get a 200 response from the server, it was a real comment.
+            // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
+            // Unless the user explicitely used /done or /close, send a /todo to the issue.
+            if(!explicitelyClosed) {
+              axios.post(state.gitlab + reportURL, {body: "/todo"}, {headers: {'Private-Token': state.privateToken}})
+              // the result from this POST command is ignored
+            }
+          }
+        }
+      }
+      commit('editIssue', {issueIndex: i, newMetadata: {report_hours: 0, report_comment: ''}})
+    }
+
+    /** report to an email */
+    if(state.emailReportHours) {
+      let subject = encodeURIComponent(`${date} hours to report`)
+      let body = encodeURIComponent(JSON.stringify(reportBody, null, 4))
+      if(body) {
+        window.open(`mailto:${state.emailReportHours}?subject=${subject}&body=${body}`)
+      } else {
+        window.open(`mailto:${state.emailReportHours}?subject=${subject}`)
+      }
+    }
   },
 }
 

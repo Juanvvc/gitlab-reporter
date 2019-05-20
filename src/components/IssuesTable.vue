@@ -43,21 +43,13 @@ Shows a table with information about issues
 <script>
 
 import EditDataDialog from './EditDataDialog.vue'
+import { mapState } from 'vuex'
+import Console from '@/lib/Console.js'
+
 
 export default {
   components: {
     EditDataDialog
-  },
-
-  props: {
-    issues: {    // issues, as returned by gitlab (see getIssues for some extra fields)
-      required: true,
-      type: Array
-    },
-    loading: {
-      required: true,
-      type: Boolean
-    }
   },
 
   data () {
@@ -75,8 +67,20 @@ export default {
     }
   },
 
+  computed: {
+    ...mapState(['loading', 'issues'])
+  },
+
   methods: {
     async editReport (issue) {
+      // guess the index of the issue to change in the issues array
+      let issueIndex
+      for(issueIndex=0; issueIndex<this.issues.length; issueIndex++) {
+        if(this.issues[issueIndex].iid == issue.iid) {
+          break
+        }
+      }
+
       let params = {
         title: `Report to "${issue.project_name} - ${issue.title}"`,
         fields: [
@@ -87,8 +91,7 @@ export default {
 
       let newMetadata = await this.$refs.editDataDialog.edit(params)
       if(newMetadata) {
-        issue.report_hours = newMetadata.report_hours
-        issue.report_comment = newMetadata.report_comment
+        this.$store.commit('editIssue', {issueIndex, newMetadata})
       }
     }
   }
