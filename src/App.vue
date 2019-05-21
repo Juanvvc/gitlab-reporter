@@ -83,7 +83,7 @@
 
                 <issues-table />
 
-                <report-bar @report-hours="$store.dispatch('reportHours', $event)" />
+                <report-bar @report-hours="$store.dispatch('gitlab/reportHours', $event)" />
               </v-card-text>
             </v-card>
           </v-tab-item>
@@ -182,14 +182,13 @@ export default {
       return Config.PROJECTS_PER_PAGE
     },
 
-    ...mapState(['loggedUser', 'currentUser', 'issues', 'emailReportHours', 'emailSessionTime', 'gitlab', 'reportHours', 'calendarEvents'])
+    ...mapState('gitlab', ['loggedUser', 'currentUser', 'issues', 'calendarEvents', 'reportHours', 'emailReportHours', 'gitlab'])
   },
 
   created () {
-    this.$store.commit('loadConfiguration')
-    this.$store.dispatch('login')
-    this.$store.dispatch('getUsers')
-    this.$store.dispatch('getTasks')
+    this.$store.dispatch('gitlab/login')
+    this.$store.dispatch('gitlab/getUsers')
+    this.$store.dispatch('gitlab/getTasks')
   },
 
   methods: {

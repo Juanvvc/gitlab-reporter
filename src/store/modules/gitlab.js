@@ -1,5 +1,3 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
 import axios from 'axios'
 import 'basil.js'
 import Config from '@/lib/config.js'
@@ -7,8 +5,6 @@ import Console from '@/lib/Console.js'
 
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
-
-Vue.use(Vuex)
 
 let state = {
   loading: false,
@@ -79,13 +75,15 @@ let mutations = {
   },
 
   showMilestones(state, newValue) {
-    state.showMilestones = newValue
-    basil.set('show-milestines', newValue)
+    let v = (newValue === 'true' || newValue === true)
+    state.showMilestones = v
+    basil.set('show-milestones', v)
   },
 
   reportHours(state, newValue) {
-    state.reportHours = newValue
-    basil.set('report.hours', newValue)
+    let v = (newValue === 'true' || newValue === true)
+    state.reportHours = v
+    basil.set('report-hours', v)
   },
 
   loadConfiguration(state) {
@@ -331,8 +329,9 @@ let actions = {
   },
 }
 
-export default new Vuex.Store({
+export default {
+  namespaced: true,
   state,
   mutations,
   actions
-})
+}

@@ -37,24 +37,24 @@ export default {
 
     methods: {
         startSession() {
-            if(!this.$store.state.emailSessionTime) {
+            if(!this.$store.state.gitlab.emailSessionTime) {
                 Console.warning('Session emails is not set')
                 return
             }
             let subject = encodeURIComponent(moment().format('YYYY-MM-DD HH:mm-?'))
-            Console.log(`Starting session: mailto="${this.$store.state.emailSessionTime}" subject="${subject}"`)
-            window.open(`mailto:${this.$store.state.emailSessionTime}?subject=${subject}`)
+            Console.log(`Starting session: mailto="${this.$store.state.gitlab.emailSessionTime}" subject="${subject}"`)
+            window.open(`mailto:${this.$store.state.gitlab.emailSessionTime}?subject=${subject}`)
         },
 
         stopSession() {
-            if(!this.$store.state.emailSessionTime) {
+            if(!this.$store.state.gitlab.emailSessionTime) {
                 Console.warning('Session emails is not set')
                 return
             }
             Console.log('Stop session')
             let subject = encodeURIComponent(moment().format('YYYY-MM-DD ?-HH:mm'))
-            Console.log(`Stoping session: mailto="${this.$store.state.emailSessionTime}" subject="${subject}"`)
-            window.open(`mailto:${this.$store.state.emailSessionTime}?subject=${subject}`)
+            Console.log(`Stoping session: mailto="${this.$store.state.gitlab.emailSessionTime}" subject="${subject}"`)
+            window.open(`mailto:${this.$store.state.gitlab.emailSessionTime}?subject=${subject}`)
         }
     }
 }

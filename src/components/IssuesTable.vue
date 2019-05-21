@@ -68,7 +68,7 @@ export default {
   },
 
   computed: {
-    ...mapState(['loading', 'issues'])
+    ...mapState('gitlab', ['loading', 'issues'])
   },
 
   methods: {
@@ -91,7 +91,7 @@ export default {
 
       let newMetadata = await this.$refs.editDataDialog.edit(params)
       if(newMetadata) {
-        this.$store.commit('editIssue', {issueIndex, newMetadata})
+        this.$store.commit('gitlab/editIssue', {issueIndex, newMetadata})
       }
     }
   }

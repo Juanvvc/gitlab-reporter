@@ -88,7 +88,7 @@ export default {
       return 8
     },
 
-    ...mapState(['issues'])
+    ...mapState('gitlab', ['issues'])
   }
 }
 </script>
