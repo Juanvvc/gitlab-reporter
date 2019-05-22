@@ -9,7 +9,6 @@ var basil = new window.Basil({namespace: 'gitlab-reporter'});
 let state = {
   loading: false,
   emailReportHours: '',
-  emailSessionTime: '',
   todos: [],
   users: [],
   issues: [],
@@ -47,11 +46,6 @@ let mutations = {
     state.users = newValue
   },
 
-  emailSessionTime(state, newValue) {
-    state.emailSessionTime = newValue
-    basil.set('email-session-time', newValue)
-  },
-
   emailReportHours(state, newValue) {
     state.emailReportHours = newValue
     basil.set('email-report-hours', newValue)
@@ -84,16 +78,7 @@ let mutations = {
     let v = (newValue === 'true' || newValue === true)
     state.reportHours = v
     basil.set('report-hours', v)
-  },
-
-  loadConfiguration(state) {
-    state.gitlab = basil.get('gitlab')
-    state.privateToken = basil.get('privateToken')
-    state.emailSessionTime = basil.get('email-session-time')
-    state.emailReportHours = basil.get('email-report-hours')
-    state.reportHours = basil.get('report-hours')
-    state.showMilestones = basil.get('show-milestones')
-  },  
+  }
 }
 
 async function getRemoteTasks ({gitlab, privateToken, params, url}) {
@@ -327,6 +312,18 @@ let actions = {
       }
     }
   },
+
+  /** A global action to load state from basil */
+  loadState: {
+    root: true,
+    handler({commit}) {
+      commit('gitlab', basil.get('gitlab'))
+      commit('privateToken', basil.get('privateToken'))
+      commit('emailReportHours', basil.get('email-report-hours'))
+      commit('reportHours', basil.get('report-hours'))
+      commit('showMilestones', basil.get('show-milestones'))
+    }
+  }
 }
 
 export default {

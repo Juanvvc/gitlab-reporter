@@ -36,11 +36,11 @@
             @change="$store.commit('gitlab/emailReportHours', $event)"
         ></v-text-field>
         <v-text-field
-            :value="$store.state.gitlab.emailSessionTime"
+            :value="$store.state.sessions.emailSessionTime"
             label="Report sessions hours to this email"
             hint="If empty, do not report session time"
             required
-            @change="$store.commit('gitlab/emailSessionTime', $event)"
+            @change="$store.commit('sessions/emailSessionTime', $event)"
         ></v-text-field>
         </v-card-text>
     </v-card>

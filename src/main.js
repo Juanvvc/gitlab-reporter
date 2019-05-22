@@ -5,7 +5,7 @@ import App from './App.vue'
 import store from './store'
 
 Vue.config.productionTip = false
-store.commit('gitlab/loadConfiguration')
+store.dispatch('loadState')
 
 new Vue({
   store,

@@ -182,7 +182,7 @@ export default {
       return Config.PROJECTS_PER_PAGE
     },
 
-    ...mapState('gitlab', ['loggedUser', 'currentUser', 'issues', 'calendarEvents', 'reportHours', 'emailReportHours', 'gitlab'])
+    ...mapState('gitlab', ['loggedUser', 'currentUser', 'issues', 'calendarEvents', 'reportHours', 'emailReportHours', 'gitlab', 'users'])
   },
 
   created () {
@@ -198,14 +198,15 @@ export default {
       this.alertType = type
     },
 
+    /** Set the date currently shown on calendar */
     setCalendarDate(d) {
-      // sets the date currently shown on calendar
       this.calendarDate = d;
     },
 
+    /** Change the current user */
     changeUser(user) {
-      this.currentUser = user
-      this.getTasks()
+      this.$store.commit('currentUser', user)
+      this.$store.dispatch('gitlab/getTasks')
     }
   },
 

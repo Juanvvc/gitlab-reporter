@@ -45,7 +45,7 @@ Events:
         Total hours to report: <strong>{{ Number(totalHoursToReport).toFixed(2) }}</strong>.
       </v-flex>
       <v-flex>
-        Total work hours: <strong>{{ Number(workHours).toFixed(2) }}</strong>.
+        Total work hours: <strong>{{ workHours }}</strong>.
       </v-flex>
       <v-spacer></v-spacer>
       <v-flex>
@@ -85,7 +85,12 @@ export default {
     },
 
     workHours () {
-      return 8
+      if(moment(this.date).isSame(moment(), 'day')) {
+        // we are reporting for today, we can use the session information
+        return Number(this.$store.getters['sessions/todaySessions'].duration).toFixed(2)
+      } else {
+        return '-'
+      }
     },
 
     ...mapState('gitlab', ['issues'])
