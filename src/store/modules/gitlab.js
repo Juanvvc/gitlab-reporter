@@ -1,6 +1,7 @@
 import axios from 'axios'
 import 'basil.js'
 import Config from '@/lib/config.js'
+import Console from '@/lib/Console.js'
 
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
@@ -170,7 +171,7 @@ function addIssues(issues, newIssues) {
   for(let i=0; i<newIssues.length; i++) {
     newIssue = true
     for(let j=0; j<issues.length; j++) {
-      if(issues[j].iid === newIssues[i].iid) {
+      if(issues[j].id === newIssues[i].id) {
         newIssue = false
         break
       }
@@ -274,6 +275,7 @@ let actions = {
         commit
       })
       addIssues(issues, newTodos)
+
 
       calendar = createCalendarEvents(issues)
     }

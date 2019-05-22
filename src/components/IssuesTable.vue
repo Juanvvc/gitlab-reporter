@@ -76,7 +76,7 @@ export default {
       // guess the index of the issue to change in the issues array
       let issueIndex
       for(issueIndex=0; issueIndex<this.issues.length; issueIndex++) {
-        if(this.issues[issueIndex].iid == issue.iid) {
+        if(this.issues[issueIndex].id == issue.id) {
           break
         }
       }

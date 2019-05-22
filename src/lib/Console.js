@@ -8,7 +8,7 @@ function message2string(message) {
   if(typeof message === String) {
     return message
   } else {
-    return JSON.stringify(message)
+    return JSON.stringify(message, null, 2)
   }
 }
 
