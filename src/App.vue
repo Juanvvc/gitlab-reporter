@@ -4,16 +4,6 @@
   <v-app>
     <v-content>
       <v-container>
-
-        <v-snackbar
-          v-model="showAlertMessage"
-          :color="alertType"
-          :timeout="6000"
-          bottom
-          >
-          {{ alertMessage}}
-        </v-snackbar>
-
         <v-toolbar app dark color="primary darken-2">
           <v-toolbar-title>
             <v-layout column>
@@ -123,11 +113,13 @@
             <config-tab />
           </v-tab-item>
         </v-tabs-items>
+
+        <message-bar />
       </v-container>
 
       <v-footer class="pa-3">
         <v-spacer></v-spacer>
-        <div>&copy; Juan Vera, {{ new Date().getFullYear() }}</div>
+        <div>GitLab reporter v{{ app_version }}. &copy; Juan Vera, {{ new Date().getFullYear() }}</div>
       </v-footer>
     </v-content>
   </v-app>
@@ -141,6 +133,7 @@ import SearchProject from '@/components/SearchProject.vue'
 import ProjectGantt from '@/components/ProjectGantt.vue'
 import SessionControl from '@/components/SessionControl.vue'
 import ConfigTab from '@/components/ConfigTab.vue'
+import MessageBar from '@/components/MessageBar.vue'
 import {CalendarView, CalendarViewHeader} from 'vue-simple-calendar'
 import Config from '@/lib/config.js'
 import { mapState } from 'vuex'
@@ -158,6 +151,7 @@ export default {
     SearchProject,
     ProjectGantt,
     SessionControl,
+    MessageBar,
     ConfigTab
   },
 
@@ -165,15 +159,18 @@ export default {
     return {
       activeTab: null,          // identifier of the currently selected tab
       calendarDate: new Date(), // the current date in the calendar
-      // manage alert messages
-      showAlertMessage: false,
-      alertMessage: null,
-      alertType: 'success',
       selectedProjectId: undefined // selected project id in the projects view
     }
   },
 
   computed: {
+    app_version() {
+      if(process.env.NODE_ENV === 'production') {
+        return process.env.VUE_APP_VERSION
+      }
+      return `${process.env.VUE_APP_VERSION}-${process.env.NODE_ENV}`
+    },
+
     gitlabURL() {
       return `${this.gitlab}/api/v4`
     },
@@ -185,19 +182,13 @@ export default {
     ...mapState('gitlab', ['loggedUser', 'currentUser', 'issues', 'calendarEvents', 'reportHours', 'emailReportHours', 'gitlab', 'users'])
   },
 
-  created () {
+  mounted () {
     this.$store.dispatch('gitlab/login')
     this.$store.dispatch('gitlab/getUsers')
     this.$store.dispatch('gitlab/getTasks')
   },
 
   methods: {
-    showMessage(info, type='success') {
-      this.showAlertMessage = true
-      this.alertMessage = info
-      this.alertType = type
-    },
-
     /** Set the date currently shown on calendar */
     setCalendarDate(d) {
       this.calendarDate = d;

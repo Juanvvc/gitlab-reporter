@@ -1,7 +1,6 @@
 import axios from 'axios'
 import 'basil.js'
 import Config from '@/lib/config.js'
-import Console from '@/lib/Console.js'
 
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
@@ -81,7 +80,7 @@ let mutations = {
   }
 }
 
-async function getRemoteTasks ({gitlab, privateToken, params, url}) {
+async function getRemoteTasks ({gitlab, privateToken, params, url, commit}) {
   // Add TODOs (default) or ISSUES to the list
   // - params for the request. Check https://docs.gitlab.com/ce/api/issues.html or https://docs.gitlab.com/ce/api/todos.html
   // - url for the request. Default: gitlab + '/api/v4/todos'. Use also gitlab + '/api/v4/issues'
@@ -96,8 +95,14 @@ async function getRemoteTasks ({gitlab, privateToken, params, url}) {
   // - project_name (actually, it is the "project name" part of the URL. You'll only notice differentes if the name has special characters
   // - project_url : the URL to the project
   // - report_hours: time to report next time the user clicks on 'report'
-  let mytodos = await axios.get(url, {params: params, headers: {'Private-Token': privateToken}})
+  let mytodos = []
   let issues = []
+  try {
+    mytodos = await axios.get(url, {params: params, headers: {'Private-Token': privateToken}})
+  } catch(msg) {
+    commit('messages/message', {type: 'error', message: msg}, {root: true})
+    return
+  }
 
   if(mytodos) {
     for(let i=0; i<mytodos.data.length; i++) {
@@ -177,31 +182,53 @@ function addIssues(issues, newIssues) {
 }
 
 let actions = {
+  /** Get the currently logged user */
   async login ({commit, state}) {
-    // get the the currently logged user
-
-    if(!state.gitlab || !state.privateToken) return
+    if(!state.gitlab) {
+      commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
+      return
+    }
+    if(!state.privateToken) {
+      commit('messages/message', {type: 'error', message: 'No token provided'}, {root: true})
+      return
+    }
     let url = `${state.gitlab}/api/v4/user`
-    let response = await axios.get(url, {headers: {'Private-Token': state.privateToken}})
-    if (response) {
-        commit('loggedUser', response.data)
+    try {
+      let response = await axios.get(url, {headers: {'Private-Token': state.privateToken}})
+      commit('loggedUser', response.data)
+    } catch(msg) {
+      commit('messages/message', {type: 'error', message: msg}, {root: true})
     }
   },
 
+  /** Get available users. This method only works if we have an administrative token. */
   async getUsers ({commit, state}) {
-    // get available users. This method only works if we have an administrative token
-
-    if(!state.gitlab || !state.privateToken) return
-    let response = axios.get(`${state.gitlab}/api/v4/users`, {params: {'active': 'true'}, headers: {'Private-Token': state.privateToken}})
-    if (response) {
+    if(!state.gitlab) {
+      commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
+      return
+    }
+    if(!state.privateToken || !state.loggedUser) {
+      commit('messages/message', {type: 'error', message: 'No token provided'}, {root: true})
+      return
+    }
+    try {
+      let response = axios.get(`${state.gitlab}/api/v4/users`, {params: {'active': 'true'}, headers: {'Private-Token': state.privateToken}})
       commit('users', response.data)
+    } catch(msg) {
+      commit('messages/message', {type: 'error', message: msg}, {root: true})
     }
   },
-
+  
+  /** Get issues and TODOs. This method resets arrays issues, calendarEvents and processedMilestones. */
   async getTasks ({commit, state}) {
-    // get issues and TODOs. This method resets arrays issues, calendarEvents and processedMilestones
-
-    if(!state.gitlab || !state.privateToken) return
+    if(!state.gitlab) {
+      commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
+      return
+    }
+    if(!state.privateToken || !state.loggedUser) {
+      commit('messages/message', {type: 'error', message: 'No token provided'}, {root: true})
+      return
+    }
     let issues = []
     let calendar = {}
 
@@ -233,7 +260,8 @@ let actions = {
       let newTodos = await getRemoteTasks({
         gitlab: state.gitlab,
         privateToken: state.privateToken,
-        params: {state: 'pending', type: 'Issue', per_page: Config.PROJECTS_PER_PAGE}
+        params: {state: 'pending', type: 'Issue', per_page: Config.PROJECTS_PER_PAGE},
+        commit
       })
       addIssues(issues, newTodos)
       // not TODOs, but issues assinged to me. Some times this issues are not TODOs!
@@ -242,7 +270,8 @@ let actions = {
         gitlab: state.gitlab,
         privateToken: state.privateToken,
         params: {scope: 'assigned-to-me', state: 'opened', per_page: Config.PROJECTS_PER_PAGE},
-        url: `${state.gitlab}/api/v4/issues`
+        url: `${state.gitlab}/api/v4/issues`,
+        commit
       })
       addIssues(issues, newTodos)
 
@@ -253,8 +282,8 @@ let actions = {
     commit('loading', false)
   },
 
+  /** Report hours */
   async reportHours ({commit, state}, {date}) {
-    /** report hours */
     let reportBody = []
     for(let i=0; i<state.issues.length; i++) {
       let issue = state.issues[i]
@@ -285,20 +314,29 @@ let actions = {
         // report hours to gitlab, if active
         if(state.reportHours) {
           let reportURL = '/api/v4/projects/' + issue.project_id + '/issues/' + issue.iid + '/notes'
-          let response = await axios.post(state.gitlab + reportURL, {body: spendTxt}, {headers: {'Private-Token': state.privateToken}})
-          if(response) {
+          try {
+            await axios.post(state.gitlab + reportURL, {body: spendTxt}, {headers: {'Private-Token': state.privateToken}})
+          } catch {
             // comments that only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
-            // if we get a 200 response from the server, it was a real comment.
-            // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
-            // Unless the user explicitely used /done or /close, send a /todo to the issue.
-            if(!explicitelyClosed) {
-              axios.post(state.gitlab + reportURL, {body: "/todo"}, {headers: {'Private-Token': state.privateToken}})
-              // the result from this POST command is ignored
+          }
+            
+          // Now: for some reason, GitLab marks a TODO as done if the user comments on an issue. We don't want it.
+          // Unless the user explicitely used /done or /close, send a /todo to the issue.
+          if(!explicitelyClosed) {
+            try {
+              await axios.post(state.gitlab + reportURL, {body: "/todo"}, {headers: {'Private-Token': state.privateToken}})
+            } catch {
+              // ignore any error
             }
           }
         }
       }
+
       commit('editIssue', {issueIndex: i, newMetadata: {report_hours: 0, report_comment: ''}})
+    }
+
+    if(!state.reportHours) {
+      commit('messages/message', {type: 'warning', message: 'Not reporting hours to gitlab'}, {root: true})
     }
 
     /** report to an email */
