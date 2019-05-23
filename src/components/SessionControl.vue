@@ -1,14 +1,17 @@
 <template>
-    <v-container fluid>
-        <v-layout row align-center justify-start>
-            <v-flex xs1>Sessions:</v-flex>
-            <v-btn color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
-            <v-btn color="red" class="white--text" @click="$store.dispatch('sessions/stopSession')"><v-icon>mdi-clock-out</v-icon> End session</v-btn>
-            <v-flex>
-                {{ sessionText }}
-            </v-flex>
-        </v-layout>
-    </v-container>
+  <v-container fluid>
+    <v-layout row align-center justify-start>
+      <v-flex xs1>Sessions:</v-flex>
+      <v-btn color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
+      <v-btn color="red" class="white--text" @click="$store.dispatch('sessions/stopSession')"><v-icon>mdi-clock-out</v-icon> End session</v-btn>
+      <v-btn color="primary" class="white--text" @click="customSessions"><v-icon>mdi-clock</v-icon> Custom sessions</v-btn>
+      <v-flex>
+        {{ sessionText }}
+      </v-flex>
+    </v-layout>
+
+    <edit-data-dialog ref="editDataDialog" save="Send"/>
+  </v-container>
 </template>
 
 <script>
@@ -19,17 +22,38 @@
 
 import moment from 'moment'
 import Console from '@/lib/Console.js'
+import EditDataDialog from './EditDataDialog.vue'
 
 export default {
-    computed: {
-        sessionText() {
-            if(this.$store.state.sessions.activeSessions.length == 0) {
-                return 'No sessions detected on this computer'
-            } else {
-                let duration = Number(this.$store.getters['sessions/todaySessions'].duration).toFixed(2)
-                return `Sessions: ${this.$store.getters['sessions/todaySessions'].sessions }. Total ${duration} hours.`
-            }
-        }
+  components: {
+    EditDataDialog
+  },
+
+  computed: {
+    sessionText() {
+      if(this.$store.state.sessions.activeSessions.length == 0) {
+        return 'No sessions detected on this computer'
+      } else {
+        let duration = Number(this.$store.getters['sessions/todaySessions'].duration).toFixed(2)
+        return `Sessions: ${this.$store.getters['sessions/todaySessions'].sessions }. Total ${duration} hours.`
+      }
     }
+  },
+
+  methods: {
+    async customSessions() {
+      let params = {
+        title: 'Custom sessions',
+        fields: [
+          {label: 'Sessions', name: 'sessions', value: this.$store.getters['sessions/todaySessions'].sessions , type: 'textfield', hint: 'Example: 9:00-13:00,14:00-15:00'},
+        ]
+      }
+
+      let newMetadata = await this.$refs.editDataDialog.edit(params)
+      if(newMetadata && newMetadata.sessions) {
+        this.$store.dispatch('sessions/customSessions', newMetadata)
+      }
+    }
+  }
 }
 </script>
