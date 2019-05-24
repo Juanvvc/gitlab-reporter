@@ -29,8 +29,6 @@
 * A container to control sessions.
 */
 
-import moment from 'moment'
-import Console from '@/lib/Console.js'
 import EditDataDialog from './EditDataDialog.vue'
 
 export default {
@@ -38,14 +36,34 @@ export default {
     EditDataDialog
   },
 
+  data() {
+    return {
+      sessions: undefined,
+      duration: "0"
+    }
+  },
+
   computed: {
     sessionText() {
-      if(this.$store.state.sessions.activeSessions.length == 0) {
+      if(!this.sessions) {
         return 'No sessions detected on this computer'
       } else {
-        let duration = Number(this.$store.getters['sessions/todaySessions'].duration).toFixed(2)
-        return `Sessions: ${this.$store.getters['sessions/todaySessions'].sessions }. Total ${duration} hours.`
+        return `Sessions: ${this.sessions}. Total ${this.duration} hours.`
       }
+    }
+  },
+
+  mounted() {
+    // call todaySessions every 10 seconds to update sessions and duration
+    // TODO: this is not working currently
+    this.updateSessions()
+    this.timer = setInterval(() => this.updateSessions(), 10000)
+  },
+
+  beforeDestroy() {
+    if(this.timer) {
+      clearInterval(this.timer)
+      this.timer = undefined
     }
   },
 
@@ -61,7 +79,14 @@ export default {
       let newMetadata = await this.$refs.editDataDialog.edit(params)
       if(newMetadata && newMetadata.sessions) {
         this.$store.dispatch('sessions/customSessions', newMetadata)
+        this.updateSessions
       }
+    },
+
+    updateSessions() {
+      let todaySessions = this.$store.getters['sessions/todaySessions']
+      this.sessions = todaySessions.sessions
+      this.duration = Number(todaySessions.duration).toFixed(2)
     }
   }
 }

@@ -29,7 +29,7 @@ const getters = {
         currentSession = {start: '?', end: '?'}
       }
     }
-    // mange the last session if it is open
+    // manage the last session if it is open
     if(currentSession.start !== '?') {
       sessions.push(`${currentSession.start}-?`)
       duration += moment().diff(moment(currentSession.start, ['H:m']), 'minutes')
