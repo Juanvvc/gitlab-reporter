@@ -64,37 +64,62 @@ const mutations = {
 
 const actions = {
   async startSession({commit, state}) {
-    if(!state.emailSessionTime) {
-      commit('messages/message', {type: 'warning', message: 'Session emails is not set'}, {root: true})
+    let lastSession = state.activeSessions[state.activeSessions.length - 1]
+    if( lastSession !== undefined && lastSession.action === 'start') {
+      commit('messages/message', {type: 'error', message: 'Starting an already started session'}, {root: true})
       return
     }
     let subject = encodeURIComponent(moment().format('YYYY-MM-DD HH:mm-?'))
-    window.open(`mailto:${state.emailSessionTime}?subject=${subject}`)
+    if(!state.emailSessionTime) {
+      commit('messages/message', {type: 'warning', message: 'Session emails is not set'}, {root: true})
+    } else {
+      window.open(`mailto:${state.emailSessionTime}?subject=${subject}`)
+    }
     commit('startSession')
   },
 
   async stopSession({commit, state}) {
-    if(!state.emailSessionTime) {
-      commit('messages/message', {type: 'warning', message: 'Session emails is not set'}, {root: true})
+    let lastSession = state.activeSessions[state.activeSessions.length - 1]
+    if( lastSession !== undefined && lastSession.action === 'stop') {
+      commit('messages/message', {type: 'error', message: 'Closing an already closed session'}, {root: true})
       return
     }
     let subject = encodeURIComponent(moment().format('YYYY-MM-DD ?-HH:mm'))
-    window.open(`mailto:${state.emailSessionTime}?subject=${subject}`)
+    if(!state.emailSessionTime) {
+      commit('messages/message', {type: 'warning', message: 'Session emails is not set'}, {root: true})
+    } else {
+      window.open(`mailto:${state.emailSessionTime}?subject=${subject}`)
+    }
     commit('stopSession')
   },
 
 
   async customSessions({commit, state}, {sessions}) {
-    if(!state.emailSessionTime) {
-      commit('messages/message', {type: 'warning', message: 'Session emails is not set'}, {root: true})
-      return
+
+    if(sessions !== '') {
+      let now = moment().format('YYYY-MM-DD')
+      let subject = encodeURIComponent(`${now} ${sessions}*`)
+      if(!state.emailSessionTime) {
+        commit('messages/message', {type: 'warning', message: 'Session emails is not set'}, {root: true})
+      } else {
+        window.open(`mailto:${state.emailSessionTime}?subject=${subject}`)
+      }
+
+      // save sessions in memory
+      let sessionsInfo = sessions.split(',')
+      let sessionsArray = []
+      for(let s=0; s<sessionsInfo.length; s++) {
+        let sessionInfo = sessionsInfo[s].split('-')
+        sessionsArray.push({date: now, time: sessionInfo[0], action: "start"})
+        if(sessionInfo[1] !== undefined && sessionInfo[1] !== '?') {
+          sessionsArray.push({date: now, time: sessionInfo[1], action: "stop"})
+        }
+      }
+      commit('activeSessions', sessionsArray)
+    } else {
+      // sessions are empty
+      commit('activeSessions', [])
     }
-    let now = moment().format('YYYY-MM-DD')
-    let subject = encodeURIComponent(`${now} ${sessions}*`)
-    window.open(`mailto:${state.emailSessionTime}?subject=${subject}`)
-    // clean sessions
-    // TODO: save sessions in the state
-    commit('activeSessions', [])
   },
 
   /** A global action to load state from basil */

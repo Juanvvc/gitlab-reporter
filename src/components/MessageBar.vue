@@ -1,13 +1,24 @@
 <template>
-    <div>
-    <v-alert
-        :type="msgError.type"
+    <!--v-alert
+        :type="type"
         dismissible
-        v-model="msgError.visible"
+        v-model="visible"
         transition="fade-transition">
-        {{msgError.message}}
-    </v-alert>
-    </div>
+        {{message}}
+    </v-alert-->
+    <v-snackbar
+      :color="type"
+      :value="visible"
+      top>
+      {{ message }}
+      <v-btn
+        dark
+        flat
+        @click="visible = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
 </template>
 
 <script>
@@ -20,11 +31,9 @@
 export default {
   data () {
     return {
-      msgError: {
-        visible: false,
-        message: '',
-        type: 'error'
-      }
+      visible: false,
+      message: '',
+      type: 'error'
     }
   },
 
@@ -32,13 +41,13 @@ export default {
     // After a new message, process it
     this.$store.subscribe((mutation) => {
       if(mutation.type === 'messages/message') {
-        this.msgError.visible = true
+        this.visible = true
         const messageTypes = ['info', 'warning', 'error']
         for(let e=0; e<messageTypes.length; e++) {
           let newMessage = this.$store.getters['messages/lastMessage'](messageTypes[e])
           if(newMessage) {
-            this.msgError.type = messageTypes[e]
-            this.msgError.message = newMessage
+            this.type = messageTypes[e]
+            this.message = newMessage
           }
         }
         // Clean all messages

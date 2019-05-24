@@ -2,9 +2,18 @@
   <v-container fluid>
     <v-layout row align-center justify-start>
       <v-flex xs1>Sessions:</v-flex>
-      <v-btn color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
-      <v-btn color="red" class="white--text" @click="$store.dispatch('sessions/stopSession')"><v-icon>mdi-clock-out</v-icon> End session</v-btn>
-      <v-btn color="primary" class="white--text" @click="customSessions"><v-icon>mdi-clock</v-icon> Custom sessions</v-btn>
+      <v-tooltip top>
+         <v-btn slot="activator" color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
+        Start a session and (optionally) send the email inmediately
+      </v-tooltip>
+      <v-tooltip top>
+        <v-btn slot="activator" color="red" class="white--text" @click="$store.dispatch('sessions/stopSession')"><v-icon>mdi-clock-out</v-icon> End session</v-btn>
+        Stop a session and (optionally) send the email inmediately
+      </v-tooltip>
+      <v-tooltip top>
+        <v-btn slot="activator" color="primary" class="white--text" @click="customSessions"><v-icon>mdi-clock</v-icon> Custom sessions</v-btn>
+        Enter the session information manyllay and (optionally) the email inmediately
+      </v-tooltip>
       <v-flex>
         {{ sessionText }}
       </v-flex>
