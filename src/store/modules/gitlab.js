@@ -101,7 +101,7 @@ async function getRemoteTasks ({gitlab, privateToken, params, url, commit}) {
     mytodos = await axios.get(url, {params: params, headers: {'Private-Token': privateToken}})
   } catch(msg) {
     commit('messages/message', {type: 'error', message: msg}, {root: true})
-    return
+    return []
   }
 
   if(mytodos) {

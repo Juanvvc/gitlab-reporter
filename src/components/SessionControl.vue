@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
-    <v-layout row align-center justify-start>
-      <v-flex xs1>Sessions:</v-flex>
+    <v-layout row align-center justify-start wrap>
+      <v-flex xs1 class="hidden-sm-and-down">Sessions:</v-flex>
       <v-tooltip top>
          <v-btn slot="activator" color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
         Start a session and (optionally) send the email inmediately
@@ -30,6 +30,8 @@
 */
 
 import EditDataDialog from './EditDataDialog.vue'
+import { mapState } from 'vuex'
+
 
 export default {
   components: {
@@ -50,21 +52,18 @@ export default {
       } else {
         return `Sessions: ${this.sessions}. Total ${this.duration} hours.`
       }
+    },
+    ...mapState('sessions', ['activeSessions'])
+  },
+
+  watch: {
+    activeSessions() {
+      this.updateSessions()
     }
   },
 
   mounted() {
-    // call todaySessions every 10 seconds to update sessions and duration
-    // TODO: this is not working currently
     this.updateSessions()
-    this.timer = setInterval(() => this.updateSessions(), 10000)
-  },
-
-  beforeDestroy() {
-    if(this.timer) {
-      clearInterval(this.timer)
-      this.timer = undefined
-    }
   },
 
   methods: {
@@ -79,10 +78,10 @@ export default {
       let newMetadata = await this.$refs.editDataDialog.edit(params)
       if(newMetadata && newMetadata.sessions) {
         this.$store.dispatch('sessions/customSessions', newMetadata)
-        this.updateSessions
       }
     },
 
+    /** Update the session information text */
     updateSessions() {
       let todaySessions = this.$store.getters['sessions/todaySessions']
       this.sessions = todaySessions.sessions

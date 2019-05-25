@@ -8,7 +8,8 @@
     </v-alert-->
     <v-snackbar
       :color="type"
-      :value="visible"
+      v-model="visible"
+      :timeout="timeout"
       top>
       {{ message }}
       <v-btn
@@ -33,7 +34,8 @@ export default {
     return {
       visible: false,
       message: '',
-      type: 'error'
+      type: 'error',
+      timeout: 6000
     }
   },
 
