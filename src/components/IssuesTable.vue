@@ -1,9 +1,3 @@
-<!--
-
-Shows a table with information about issues
-
--->
-
 <template>
   <div>
     <v-data-table
@@ -42,9 +36,12 @@ Shows a table with information about issues
 
 <script>
 
+/**
+* Shows a table with information about issues
+*/
+
 import EditDataDialog from './EditDataDialog.vue'
 import { mapState } from 'vuex'
-import Console from '@/lib/Console.js'
 
 
 export default {

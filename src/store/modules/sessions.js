@@ -1,5 +1,4 @@
 import 'basil.js'
-import Console from '@/lib/Console.js'
 import moment from 'moment'
 
 const basil = new window.Basil({namespace: 'gitlab-reporter'});

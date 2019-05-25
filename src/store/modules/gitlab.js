@@ -1,7 +1,6 @@
 import axios from 'axios'
 import 'basil.js'
 import Config from '@/lib/config.js'
-import Console from '@/lib/Console.js'
 
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
