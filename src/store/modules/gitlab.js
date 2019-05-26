@@ -4,7 +4,9 @@ import Config from '@/lib/config.js'
 
 var basil = new window.Basil({namespace: 'gitlab-reporter'});
 
-
+/** A Vuex module to manage the state related to a gitlab server.
+ * @exports vuex/state:gitlab
+ */
 let state = {
   loading: false,
   emailReportHours: '',
@@ -21,6 +23,9 @@ let state = {
   showMilestones: true
 }
 
+/** The mutations.
+ * @exports vuex/mutations:gitlab
+ */
 let mutations = {
   loggedUser(state, newValue) {
     state.loggedUser = newValue
@@ -181,6 +186,9 @@ function addIssues(issues, newIssues) {
   }
 }
 
+/** The actions.
+ * @exports vuex/actions:gitlab
+ */
 let actions = {
   /** Get the currently logged user */
   async login ({commit, state}) {
@@ -201,7 +209,7 @@ let actions = {
     }
   },
 
-  /** Get available users. This method only works if we have an administrative token. */
+  /** Get available users. This action only works if we have an administrative token. */
   async getUsers ({commit, state}) {
     if(!state.gitlab) {
       commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
@@ -212,7 +220,7 @@ let actions = {
       return
     }
     try {
-      let response = axios.get(`${state.gitlab}/api/v4/users`, {params: {'active': 'true'}, headers: {'Private-Token': state.privateToken}})
+      let response = await axios.get(`${state.gitlab}/api/v4/users`, {params: {'active': 'true'}, headers: {'Private-Token': state.privateToken}})
       commit('users', response.data)
     } catch(msg) {
       commit('messages/message', {type: 'error', message: msg}, {root: true})
@@ -264,12 +272,11 @@ let actions = {
         commit
       })
       addIssues(issues, newTodos)
-      // not TODOs, but issues assinged to me. Some times this issues are not TODOs!
-      // TODO: assigned-to-me is deprecated in gitlab>11. Use assigned_to_me instead
+      // not TODOs, but issues assinged to me. Sometimes these issues are not TODOs!
       newTodos = await getRemoteTasks({
         gitlab: state.gitlab,
         privateToken: state.privateToken,
-        params: {scope: 'assigned-to-me', state: 'opened', per_page: Config.PROJECTS_PER_PAGE},
+        params: {scope: Config.ASSIGNED_TO_ME, state: 'opened', per_page: Config.PROJECTS_PER_PAGE},
         url: `${state.gitlab}/api/v4/issues`,
         commit
       })

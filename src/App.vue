@@ -202,7 +202,7 @@ export default {
 
     /** Change the current user */
     changeUser(user) {
-      this.$store.commit('currentUser', user)
+      this.$store.commit('gitlab/currentUser', user)
       this.$store.dispatch('gitlab/getTasks')
     }
   },

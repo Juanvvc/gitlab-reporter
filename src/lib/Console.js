@@ -1,7 +1,7 @@
 /** A console to log messages to the console during debugging time.
  * Messages are not printed at production time.
  * Use this Object instead of raw console to avoid linter warning and errors.
- * @module Console
+ * @module lib/Console
  */
 
 function message2string(message) {
