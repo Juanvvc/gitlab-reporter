@@ -28,6 +28,11 @@
 * A component to manage messages from the messages vuex module.
 *
 * @module components/MessageBar
+* @vue-data {Boolean} [visible=false] - If true, show the message
+* @vue-data {String} message - The message to show
+* @vue-data {String} [type=error] - The type of message. Currently, info, error and warning.
+* @vue-data {Number} [timeout=6000] - Show the message during during this number of milliseconds.
+* @vue-prop {Boolean} [dismissable=true] - If True, the message can be closed by the user.
 */
 export default {
   data () {

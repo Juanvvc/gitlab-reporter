@@ -3,13 +3,21 @@ import moment from 'moment'
 
 const basil = new window.Basil({namespace: 'gitlab-reporter'});
 
+/** A Vuex module that manages session state.
+ * @exports vuex/state:sessions
+ */
 const state = {
+  /** Send session information to this email. If undefined or empty, do not send session information */
   emailSessionTime: '',
+  /** Today sessions. Objects {date,time,action}, action being "start" or "end" */
   activeSessions: []
 }
 
+/** The getters.
+ * @exports vuex/getters:sessions
+ */
 const getters = {
-  /** @returns An object. durarion is the total hours of today's sessions. sessions is a readable text describing today's sessions */
+  /** @returns An object. duration is the total hours of today's sessions. sessions is a readable text describing today's sessions */
   todaySessions(state) {
     let currentSession = {start: '?', end: '?'}
     let duration = 0
@@ -62,6 +70,7 @@ const mutations = {
 }
 
 const actions = {
+  /** Start a session rigth now */
   async startSession({commit, state}) {
     let lastSession = state.activeSessions[state.activeSessions.length - 1]
     if( lastSession !== undefined && lastSession.action === 'start') {
@@ -77,6 +86,7 @@ const actions = {
     commit('startSession')
   },
 
+  /** Stop a session right now. */
   async stopSession({commit, state}) {
     let lastSession = state.activeSessions[state.activeSessions.length - 1]
     if( lastSession !== undefined && lastSession.action === 'stop') {
@@ -92,7 +102,11 @@ const actions = {
     commit('stopSession')
   },
 
-
+  /** Register sessions using a string.
+   * 
+   * @param {string} sessions - A string with start and end times of different sessions.
+   *   For example: "09:00-13:00,14:00-18:00", "09:00-13:00,14:00-?", "09:00-13:00,14:00" (in this case, the last sessions is still open)
+   */
   async customSessions({commit, state}, {sessions}) {
 
     if(sessions !== '') {
@@ -134,7 +148,10 @@ const actions = {
       } else {
         let firstSession = activeSessions[0]
         if(!moment().isSame(firstSession.date, 'day')) {
+          // not today: remove sessions
           activeSessions = []
+          // alert the user
+          commit('messages/message', {type: 'info', message: 'Old sessions cleaned out'}, {root: true})
         }
       }
 

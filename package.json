@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "docs": "node_modules/.bin/jsdoc -c .jsdoc.json -R README.md src"
   },
   "dependencies": {
     "@mdi/font": "^3.3.92",
@@ -24,6 +25,9 @@
     "@vue/cli-plugin-babel": "^3.2.2",
     "@vue/cli-plugin-eslint": "^3.2.2",
     "@vue/cli-service": "^3.2.2",
+    "jsdoc": "^3.6.2",
+    "jsdoc-vuejs": "^2.4.3",
+    "minami": "^1.2.3",
     "vue-cli-plugin-vuetify": "^0.4.6",
     "vue-template-compiler": "^2.5.17"
   },

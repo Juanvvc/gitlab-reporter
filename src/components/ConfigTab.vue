@@ -52,9 +52,11 @@
 <script>
 
 /**
-* Manages the dconfiguration tab.
+* Manages the configuration tab.
+* @module components/ConfigTab
+* @vue-computed {Boolean} reportHours - If true, report tasks to the configured gitlab server.
+* @vue-computed {Boolean} showMilestones - If true, show milestones on the calendar.
 */
-
 export default {
   computed: {
     tokenURL() {

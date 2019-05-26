@@ -2,9 +2,8 @@
 import Console from '@/lib/Console'
 
 /** Vuex store module to manage system messages.
-* @module store/modules/messages
+* @exports vuex/state:messages
 */
-
 const state = {
   /** The stack of messages */
   messages: {
@@ -16,8 +15,8 @@ const state = {
 }
 
 /** The mutations.
-@namespace
-*/
+ * @exports vuex/mutations:messages
+ */
 const mutations = {
   /** Cleans all messages */
   clean(state) {
@@ -59,7 +58,7 @@ const mutations = {
 }
 
 /** The getters.
-@namespace
+* @exports vuex/getters:messages
 */
 const getters = {
   /** @return True if there are messages in the stack. */
@@ -67,8 +66,10 @@ const getters = {
     return state.messages.error.length + state.messages.warning.length + state.messages.info.length + state.messages.debug.length
   },
 
-  /** @return The last message from the stack.
+  /**
+  * Get the last message of a specific type from the stack.
   * @param {String} type - The type of message:  error, info, debug or warning.  If not provided, "error" is the default type
+  * @return The string with the message
   */
   lastMessage: (state) => (type) => {
     if(!type) {
