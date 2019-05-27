@@ -6,7 +6,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "docs": "node_modules/.bin/jsdoc -c .jsdoc.json -R README.md src"
+    "docs": "node_modules/.bin/jsdoc -c .jsdoc.json -R README.md src",
+    "deploy": "yarn build ; node_modules/.bin/push-dir --dir=dist --branch=gh-pages --cleanup"
   },
   "dependencies": {
     "@mdi/font": "^3.3.92",

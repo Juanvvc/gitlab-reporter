@@ -12,6 +12,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# This file is not in the repository to be able to develop both in Linux and Windows
+yarn.lock
+
 # Editor directories and files
 .idea
 .vscode
