@@ -13,38 +13,6 @@ const state = {
   activeSessions: []
 }
 
-/** The getters.
- * @exports vuex/getters:sessions
- */
-const getters = {
-  /** @returns An object. duration is the total hours of today's sessions. sessions is a readable text describing today's sessions */
-  todaySessions(state) {
-    let currentSession = {start: '?', end: '?'}
-    let duration = 0
-    let sessions = []
-    for(let i=0; i<state.activeSessions.length; i++) {
-      let s = state.activeSessions[i]
-      if(s.action === 'start') {
-        currentSession.start = s.time
-      } else {
-        currentSession.end = s.time
-        if(currentSession.start !== '?') {
-          // we calculate difference in minutes because if we set hours, we only get full hours
-          duration += moment(currentSession.end, ['H:m']).diff(moment(currentSession.start, ['H:m']), 'minutes')
-        }
-        sessions.push(`${currentSession.start}-${currentSession.end}`)
-        currentSession = {start: '?', end: '?'}
-      }
-    }
-    // manage the last session if it is open
-    if(currentSession.start !== '?') {
-      sessions.push(`${currentSession.start}-?`)
-      duration += moment().diff(moment(currentSession.start, ['H:m']), 'minutes')
-    }
-    return {duration: duration / 60, sessions: sessions.join(',')}
-  }
-}
-
 const mutations = {
   emailSessionTime(state, newValue) {
     state.emailSessionTime = newValue
@@ -165,7 +133,6 @@ const actions = {
 export default {
   namespaced: true,
   state,
-  getters,
   mutations,
   actions
 }

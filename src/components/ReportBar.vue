@@ -44,9 +44,6 @@ Events:
       <v-flex>
         Total hours to report: <strong>{{ Number(totalHoursToReport).toFixed(2) }}</strong>.
       </v-flex>
-      <v-flex>
-        Total work hours: <strong>{{ workHours }}</strong>.
-      </v-flex>
       <v-spacer></v-spacer>
       <v-flex>
         <v-btn
@@ -82,15 +79,6 @@ export default {
         rh += parseFloat(this.issues[i].report_hours);
       }
       return rh;
-    },
-
-    workHours () {
-      if(moment(this.date).isSame(moment(), 'day')) {
-        // we are reporting for today, we can use the session information
-        return Number(this.$store.getters['sessions/todaySessions'].duration).toFixed(2)
-      } else {
-        return '-'
-      }
     },
 
     ...mapState('gitlab', ['issues'])

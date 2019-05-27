@@ -8,5 +8,7 @@ export default {
     /** Name of the assigned_to_me parameter.
      *  If gitlab < 11, use "assigned-to-me". Else, use "assigned_to_me".
      */
-    ASSIGNED_TO_ME: 'assigned-to-me'
+    ASSIGNED_TO_ME: 'assigned-to-me',
+    /** Update the session duration after these milliseconds */
+    UPDATE_DURATION: 30000
 }

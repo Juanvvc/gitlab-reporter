@@ -25,14 +25,45 @@
 
 <script>
 
-/**
-* A container to control sessions.
-*/
-
 import EditDataDialog from './EditDataDialog.vue'
 import { mapState } from 'vuex'
+import Config from '@/lib/config'
+import moment from 'moment'
 
+/** Get information about today's sessions.
+* @param {Array} activeSessions - The activeSessions array in the Vuex module sessions state.
+* @returns An object. duration is the total hours of today's sessions. sessions is a readable text describing today's sessions
+*/
+function todaySessions(activeSessions) {
+  let currentSession = {start: '?', end: '?'}
+  let duration = 0
+  let sessions = []
+  for(let i=0; i<activeSessions.length; i++) {
+    let s = activeSessions[i]
+    if(s.action === 'start') {
+      currentSession.start = s.time
+    } else {
+      currentSession.end = s.time
+      if(currentSession.start !== '?') {
+        // we calculate difference in minutes because if we set hours, we only get full hours
+        duration += moment(currentSession.end, ['H:m']).diff(moment(currentSession.start, ['H:m']), 'minutes')
+      }
+      sessions.push(`${currentSession.start}-${currentSession.end}`)
+      currentSession = {start: '?', end: '?'}
+    }
+  }
+  // manage the last session if it is open
+  if(currentSession.start !== '?') {
+    sessions.push(`${currentSession.start}-?`)
+    duration += moment().diff(moment(currentSession.start, ['H:m']), 'minutes')
+  }
+  return {duration: duration / 60, sessions: sessions.join(',')}
+}
 
+/**
+* A container to stop and start sessions.
+* @module components/SessionControl
+*/
 export default {
   components: {
     EditDataDialog
@@ -57,13 +88,19 @@ export default {
   },
 
   watch: {
-    activeSessions() {
-      this.updateSessions()
-    }
+    activeSessions: () => this.updateSessions()
   },
 
   mounted() {
     this.updateSessions()
+    // update the duration every UPDATE_TIMEOUT milliseconds
+    this.interval = setInterval(() => this.updateSessions(), Config.UPDATE_DURATION)
+  },
+
+  beforeDestroy() {
+    if(this.interval) {
+      this.clearInterval(this.interval)
+    }
   },
 
   methods: {
@@ -71,21 +108,22 @@ export default {
       let params = {
         title: 'Custom sessions',
         fields: [
-          {label: 'Sessions', name: 'sessions', value: this.$store.getters['sessions/todaySessions'].sessions , type: 'textfield', hint: 'Example: 9:00-13:00,14:00-15:00'},
+          {label: 'Sessions', name: 'sessions', value: todaySessions(this.activeSessions).sessions , type: 'textfield', hint: 'Example: 9:00-13:00,14:00-15:00'},
         ]
       }
 
       let newMetadata = await this.$refs.editDataDialog.edit(params)
       if(newMetadata && newMetadata.sessions) {
         this.$store.dispatch('sessions/customSessions', newMetadata)
+        this.updateSessions()
       }
     },
 
     /** Update the session information text */
     updateSessions() {
-      let todaySessions = this.$store.getters['sessions/todaySessions']
-      this.sessions = todaySessions.sessions
-      this.duration = Number(todaySessions.duration).toFixed(2)
+      let ts = todaySessions(this.activeSessions)
+      this.sessions = ts.sessions
+      this.duration = Number(ts.duration).toFixed(2)
     }
   }
 }
