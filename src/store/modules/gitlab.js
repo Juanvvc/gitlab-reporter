@@ -7,7 +7,7 @@ var basil = new window.Basil({namespace: 'gitlab-reporter'});
 /** A Vuex module to manage the state related to a gitlab server.
  * @exports vuex/state:gitlab
  */
-let state = {
+const state = {
   loading: false,
   emailReportHours: '',
   todos: [],
@@ -23,10 +23,17 @@ let state = {
   showMilestones: true
 }
 
+/** The getters.
+ * @exports vues/getters:gitlab
+ */
+const getters = {
+  gitlabURL: state => `${state.gitlab}/api/v4`
+}
+
 /** The mutations.
  * @exports vuex/mutations:gitlab
  */
-let mutations = {
+const mutations = {
   loggedUser(state, newValue) {
     state.loggedUser = newValue
     state.currentUser = newValue
@@ -88,7 +95,7 @@ let mutations = {
 async function getRemoteTasks ({gitlab, privateToken, params, url, commit}) {
   // Add TODOs (default) or ISSUES to the list
   // - params for the request. Check https://docs.gitlab.com/ce/api/issues.html or https://docs.gitlab.com/ce/api/todos.html
-  // - url for the request. Default: gitlab + '/api/v4/todos'. Use also gitlab + '/api/v4/issues'
+  // - url for the request. Default: gitlabURL/todos'. Use also gitlabURL/issues'
 
   if(!gitlab || !privateToken) return []
   if(url === undefined) {
@@ -189,9 +196,9 @@ function addIssues(issues, newIssues) {
 /** The actions.
  * @exports vuex/actions:gitlab
  */
-let actions = {
+const actions = {
   /** Get the currently logged user */
-  async login ({commit, state}) {
+  async login ({commit, state, getters}) {
     if(!state.gitlab) {
       commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
       return
@@ -200,7 +207,7 @@ let actions = {
       commit('messages/message', {type: 'error', message: 'No token provided'}, {root: true})
       return
     }
-    let url = `${state.gitlab}/api/v4/user`
+    let url = `${getters.gitlabURL}/user`
     try {
       let response = await axios.get(url, {headers: {'Private-Token': state.privateToken}})
       commit('loggedUser', response.data)
@@ -210,7 +217,7 @@ let actions = {
   },
 
   /** Get available users. This action only works if we have an administrative token. */
-  async getUsers ({commit, state}) {
+  async getUsers ({commit, state, getters}) {
     if(!state.gitlab) {
       commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
       return
@@ -220,7 +227,7 @@ let actions = {
       return
     }
     try {
-      let response = await axios.get(`${state.gitlab}/api/v4/users`, {params: {'active': 'true'}, headers: {'Private-Token': state.privateToken}})
+      let response = await axios.get(`${getters.gitlabURL}/users`, {params: {'active': 'true'}, headers: {'Private-Token': state.privateToken}})
       commit('users', response.data)
     } catch(msg) {
       commit('messages/message', {type: 'error', message: msg}, {root: true})
@@ -228,7 +235,7 @@ let actions = {
   },
   
   /** Get issues and TODOs. This method resets arrays issues, calendarEvents and processedMilestones. */
-  async getTasks ({commit, state}) {
+  async getTasks ({commit, state, getters}) {
     if(!state.gitlab) {
       commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
       return
@@ -277,7 +284,7 @@ let actions = {
         gitlab: state.gitlab,
         privateToken: state.privateToken,
         params: {scope: Config.ASSIGNED_TO_ME, state: 'opened', per_page: Config.PROJECTS_PER_PAGE},
-        url: `${state.gitlab}/api/v4/issues`,
+        url: `${getters.gitlabURL}/issues`,
         commit
       })
       addIssues(issues, newTodos)
@@ -291,7 +298,7 @@ let actions = {
   },
 
   /** Report hours */
-  async reportHours ({commit, state}, {date}) {
+  async reportHours ({commit, state, getters}, {date}) {
     let reportBody = []
     for(let i=0; i<state.issues.length; i++) {
       let issue = state.issues[i]
@@ -321,9 +328,9 @@ let actions = {
 
         // report hours to gitlab, if active
         if(state.reportHours) {
-          let reportURL = '/api/v4/projects/' + issue.project_id + '/issues/' + issue.iid + '/notes'
+          let reportURL = getters.gitlabURL + issue.project_id + '/issues/' + issue.iid + '/notes'
           try {
-            await axios.post(state.gitlab + reportURL, {body: spendTxt}, {headers: {'Private-Token': state.privateToken}})
+            await axios.post(reportURL, {body: spendTxt}, {headers: {'Private-Token': state.privateToken}})
           } catch {
             // comments that only report hours, i.e. without a commentToReport, are not real comments and they return HTTP 400.
           }
@@ -332,7 +339,7 @@ let actions = {
           // Unless the user explicitely used /done or /close, send a /todo to the issue.
           if(!explicitelyClosed) {
             try {
-              await axios.post(state.gitlab + reportURL, {body: "/todo"}, {headers: {'Private-Token': state.privateToken}})
+              await axios.post(reportURL, {body: "/todo"}, {headers: {'Private-Token': state.privateToken}})
             } catch {
               // ignore any error
             }
@@ -376,5 +383,6 @@ export default {
   namespaced: true,
   state,
   mutations,
-  actions
+  actions,
+  getters
 }

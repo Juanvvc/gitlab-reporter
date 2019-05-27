@@ -13,7 +13,7 @@
     "@mdi/font": "^3.3.92",
     "axios": "^0.18.0",
     "basil.js": "^0.4.9",
-    "frappe-gantt": "^0.3.0",
+    "frappe-gantt": "https://github.com/Juanvvc/gantt.git",
     "moment": "^2.22.2",
     "node-sass": "^4.11.0",
     "sass-loader": "^7.1.0",

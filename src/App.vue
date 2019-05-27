@@ -49,15 +49,15 @@
           icons-and-text
           centered >
 
-          <v-tab v-if="privateToken && gitlab" href="#tab-reporter">Reporter<v-icon>mdi-account-clock</v-icon></v-tab>
-          <v-tab v-if="privateToken && gitlab" href="#tab-calendar">Calendar<v-icon>calendar_today</v-icon></v-tab>
-          <!--v-tab v-if="privateToken && gitlab" href="#tab-gantt">Gantt<v-icon>mdi-file-tree</v-icon></v-tab-->
+          <v-tab v-if="gitlabConfigured" href="#tab-reporter">Reporter<v-icon>mdi-account-clock</v-icon></v-tab>
+          <v-tab v-if="gitlabConfigured" href="#tab-calendar">Calendar<v-icon>calendar_today</v-icon></v-tab>
+          <v-tab v-if="gitlabConfigured" href="#tab-gantt">Gantt<v-icon>mdi-file-tree</v-icon></v-tab>
           <v-tab href="#tab-config">Settings<v-icon>settings</v-icon></v-tab>
         </v-tabs>
 
         <v-tabs-items v-model="activeTab" >
           <!-- reporter -->
-          <v-tab-item v-if="privateToken && gitlab" value="tab-reporter">
+          <v-tab-item v-if="gitlabConfigured" value="tab-reporter">
             <v-card flat>
               <v-card-text>
                 <h2>Open issues and TODOs for {{ currentUser.name }}</h2>
@@ -79,7 +79,7 @@
           </v-tab-item>
 
           <!-- calendar -->
-          <v-tab-item v-if="privateToken && gitlab" value="tab-calendar">
+          <v-tab-item v-if="gitlabConfigured" value="tab-calendar">
             <v-card flat height="800px">
               <h2>Calendar</h2>
 
@@ -100,13 +100,13 @@
           </v-tab-item>
 
           <!-- Gantt -->
-          <!--v-tab-item v-if="privateToken && gitlab" value="tab-gantt">
+          <v-tab-item v-if="gitlabConfigured" value="tab-gantt">
             <v-card flat height="800px">
               <h2>Gantt</h2>
-              <search-project :url="gitlabURL + '/projects'" @change="selectedProjectId = arguments[0]"/>
-              <project-gantt :projectId="selectedProjectId" :url="gitlabURL + '/projects'" />
+              <search-project @change="selectedProjectId = arguments[0]"/>
+              <project-gantt :projectId="selectedProjectId" />
             </v-card>
-          </v-tab-item-->
+          </v-tab-item>
 
           <!-- config -->
           <v-tab-item value="tab-config">
@@ -136,7 +136,7 @@ import ConfigTab from '@/components/ConfigTab.vue'
 import MessageBar from '@/components/MessageBar.vue'
 import {CalendarView, CalendarViewHeader} from 'vue-simple-calendar'
 import Config from '@/lib/config.js'
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 require("vue-simple-calendar/static/css/default.css")
 require("@mdi/font/css/materialdesignicons.min.css")
 
@@ -171,15 +171,16 @@ export default {
       return `${process.env.VUE_APP_VERSION}-${process.env.NODE_ENV}`
     },
 
-    gitlabURL() {
-      return `${this.gitlab}/api/v4`
+    gitlabConfigured() {
+      return this.gitlab && this.privateToken
     },
 
     maxTasks() {
       return Config.PROJECTS_PER_PAGE
     },
 
-    ...mapState('gitlab', ['loggedUser', 'currentUser', 'issues', 'calendarEvents', 'reportHours', 'emailReportHours', 'gitlab', 'users', 'privateToken'])
+    ...mapState('gitlab', ['loggedUser', 'currentUser', 'issues', 'calendarEvents', 'reportHours', 'emailReportHours', 'gitlab', 'users', 'privateToken', 'gitlabURL']),
+    ...mapGetters('gitlab', ['gitlabURL'])
   },
 
   mounted () {
