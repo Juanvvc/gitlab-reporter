@@ -29,6 +29,7 @@
     "jsdoc": "^3.6.2",
     "jsdoc-vuejs": "^2.4.3",
     "minami": "^1.2.3",
+    "push-dir": "^0.4.1",
     "vue-cli-plugin-vuetify": "^0.4.6",
     "vue-template-compiler": "^2.5.17"
   },
