@@ -315,6 +315,7 @@ const actions = {
             iid: issue.iid,
             title: issue.title,
             spendTxt: spendTxt,
+            hours: hoursToReport,
             comment: commentToReport
           }
         )
