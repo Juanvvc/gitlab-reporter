@@ -10,11 +10,15 @@ import Console from '@/lib/Console.js'
 import Gantt from 'frappe-gantt'
 import moment from 'moment'
 
-
+/** Get a HTML from a task.
+ * @param {Object} task - task information, as used by frappe-gantt
+ * @returns HTML code to be shown on the frappe-gantt popup
+ */
 function taskHTML(task) {
   let fromDate = moment(task.start).format('YYYY/MM/DD')
   let toDate = moment(task.end).format('YYYY/MM/DD')
   if(task.web_url) {
+    // web_url is define: issues
     return `
     <div class="title">${task.name}</div>
     <div class="subtitle">Dates: ${fromDate} - ${toDate}</div>
@@ -22,6 +26,7 @@ function taskHTML(task) {
     <div><a href="${task.web_url}" target="_blank">GITLAB link</a></div>
     `
   } else {
+    // no web_url: probably, milestones
     return `
     <div class="title">${task.name}</div>
     <div class="subtitle">Dates: ${fromDate} - ${toDate}</div>
@@ -31,7 +36,10 @@ function taskHTML(task) {
 
 /**
 * Shows the Gantt diagram about a single project using frappe-gantt.
+* We use a modidifed version of the "official" frappe-gantt library that allows switching
+* off the editing handlers.
 * The Gantt diagram dependes on the gitlab vuex module, but does not use its methods.
+* @module components/ProjectGantt
 * @vue-prop {String} projectId - The identifier of the project to show.
 * @vue-computed {String} privateToken - store.gitlab.privateToken
 * @vue-computed {String} gitlab - store.gitlab.gitlab
@@ -65,7 +73,7 @@ export default {
     async downloadProjectInfo (projectId) {
       // check if gitlab is configured
       if(!this.gitlab || !this.privateToken) {
-        this.commit('messages/message', {type: 'error', message: 'The gitlab server is not defined'}, {root: true})
+        // this.$store.commit('messages/message', {type: 'warning', message: 'The gitlab server is not configured'}, {root: true})
         return
       }
       let tasks = []
@@ -98,6 +106,7 @@ export default {
       }
 
       // create the gantt diagram in frappe-gantt and change to week mode
+      // NOTE: "official" frappe-gantt does not have an "editable" configuration param
       let gantt = new Gantt(this.$refs['mygantt'], tasks, {
         editable: false,
         custom_popup_html: taskHTML
@@ -142,6 +151,7 @@ export default {
             // dependencies: depends on the milestone
             // id: issue-{issue identifier}
             // _id: issue identifier
+            // web_url and assignee_names are not used by frappe-gantt, but taskHTML
             return {
               'start': i.due_date?i.due_date:(new Date()).toISOString(),
               'end': i.due_date?i.due_date:(new Date()).toISOString(),

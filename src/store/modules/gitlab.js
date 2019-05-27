@@ -14,8 +14,8 @@ const state = {
   users: [],
   issues: [],
   calendarEvents: [],
-  loggedUser: {name: 'NOT_LOGGED'},
-  currentUser: {name: 'NOT_LOGGED'},
+  loggedUser: {name: 'UNAUTHENTICATED'},
+  currentUser: {name: 'UNAUTHENTICATED'},
   privateToken: null,
   gitlab: null,
   milestones: [],
@@ -200,7 +200,7 @@ const actions = {
   /** Get the currently logged user */
   async login ({commit, state, getters}) {
     if(!state.gitlab) {
-      commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
+      // commit('messages/message', {type: 'warning', message: 'The gitlab server is not configured'}, {root: true})
       return
     }
     if(!state.privateToken) {
@@ -219,7 +219,7 @@ const actions = {
   /** Get available users. This action only works if we have an administrative token. */
   async getUsers ({commit, state, getters}) {
     if(!state.gitlab) {
-      commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
+      // commit('messages/message', {type: 'warning', message: 'The gitlab server is not configured'}, {root: true})
       return
     }
     if(!state.privateToken || !state.loggedUser) {
@@ -237,7 +237,7 @@ const actions = {
   /** Get issues and TODOs. This method resets arrays issues, calendarEvents and processedMilestones. */
   async getTasks ({commit, state, getters}) {
     if(!state.gitlab) {
-      commit('messages/message', {type: 'warning', message: 'A gitlab server is not defined'}, {root: true})
+      // commit('messages/message', {type: 'warning', message: 'The gitlab server is not configured'}, {root: true})
       return
     }
     if(!state.privateToken || !state.loggedUser) {

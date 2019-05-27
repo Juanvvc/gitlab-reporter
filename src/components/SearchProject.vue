@@ -17,11 +17,10 @@
 const axios = require('axios')
 import {mapState, mapGetters} from 'vuex'
 import Config from '@/lib/config.js'
-import Console from '@/lib/Console.js'
 
 /**
-* Shows a selection controller to select a project. Projects are consulted dynamically.
-* The Gantt diagram dependes on the gitlab vuex module, but does not use its methods.
+* Shows a selection controller to select a project. Project names are checked agains gitlab automatically.
+* @module components/SearchProject
 * @vue-computed {String} privateToken - store.gitlab.privateToken
 * @vue-computed {String} gitlab - store.gitlab.gitlab
 * @vue-computed {Boolean} disabed - True if the component must be disabled
