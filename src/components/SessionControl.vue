@@ -100,7 +100,9 @@ export default {
   },
 
   watch: {
-    activeSessions: () => this.updateSessions()
+    activeSessions() {
+      this.updateSessions()
+    }
   },
 
   mounted() {
