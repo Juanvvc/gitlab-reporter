@@ -240,10 +240,16 @@ div#app {
   background-color: #eee;
 }
 
+/* Utility classes */
 .pointable{
     cursor: pointer;
 }
+.compact-form {
+    transform: scale(0.875);
+    transform-origin: left;
+}
 
+/* Calendar themes */
 .theme-default .cv-event.calendar-milestone {
 	background-color: #ffe7d0;
 	border-color: #f7e0c7;
