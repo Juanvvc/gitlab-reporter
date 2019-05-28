@@ -29,6 +29,7 @@
               </v-layout>
               <span class="caption">
                 Server: <strong>{{ gitlab }}</strong>.
+                Clocking email: <strong>{{ emailSessionTime }}</strong>.
                 Reporting email: <strong>{{ emailReportHours }}</strong>.
                 Report to GitLab: <strong>{{ reportHours }}</strong>.
               </span>
@@ -180,6 +181,7 @@ export default {
     },
 
     ...mapState('gitlab', ['loggedUser', 'currentUser', 'issues', 'calendarEvents', 'reportHours', 'emailReportHours', 'gitlab', 'users', 'privateToken', 'gitlabURL']),
+    ...mapState('sessions', ['emailSessionTime']),
     ...mapGetters('gitlab', ['gitlabURL'])
   },
 

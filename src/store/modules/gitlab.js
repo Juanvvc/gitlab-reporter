@@ -234,7 +234,8 @@ const actions = {
     }
   },
   
-  /** Get issues and TODOs. This method resets arrays issues, calendarEvents and processedMilestones. */
+  /** Get open issues and TODOs for the current user.
+   * This action resets arrays issues, calendarEvents and processedMilestones. */
   async getTasks ({commit, state, getters}) {
     if(!state.gitlab) {
       // commit('messages/message', {type: 'warning', message: 'The gitlab server is not configured'}, {root: true})
@@ -292,6 +293,37 @@ const actions = {
 
       calendar = createCalendarEvents(issues)
     }
+    commit('issues', issues)
+    commit('calendarEvents', calendar)
+    commit('loading', false)
+  },
+
+  /** Get all issues for a project.
+   * This action resets arrays issues, calendarEvents and processedMilestones. */
+  async getProjectTasks ({commit, state, getters}, {projectId}) {
+    if(!state.gitlab) {
+      // commit('messages/message', {type: 'warning', message: 'The gitlab server is not configured'}, {root: true})
+      return
+    }
+    if(!state.privateToken || !state.loggedUser) {
+      commit('messages/message', {type: 'error', message: 'No token provided'}, {root: true})
+      return
+    }
+    let issues = []
+    let calendar = {}
+
+    commit('loading', true)
+
+    let newTodos = await getRemoteTasks({
+      gitlab: state.gitlab,
+      privateToken: state.privateToken,
+      params: {per_page: Config.PROJECTS_PER_PAGE},
+      url: `${getters.gitlabURL}/project/${projectId}/issues`,
+      commit
+    })
+    addIssues(issues, newTodos)
+
+    calendar = createCalendarEvents(issues)
     commit('issues', issues)
     commit('calendarEvents', calendar)
     commit('loading', false)

@@ -3,16 +3,16 @@
     <v-layout row align-center justify-start wrap>
       <v-flex xs1 class="hidden-sm-and-down">Sessions:</v-flex>
       <v-tooltip top>
-         <v-btn slot="activator" color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
+         <v-btn  :disabled="lastSessionAction === 'start'" slot="activator" color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
         Start a session and (optionally) send the email inmediately
       </v-tooltip>
       <v-tooltip top>
-        <v-btn slot="activator" color="red" class="white--text" @click="$store.dispatch('sessions/stopSession')"><v-icon>mdi-clock-out</v-icon> End session</v-btn>
+        <v-btn :disabled="lastSessionAction === 'stop'" slot="activator" color="red" class="white--text" @click="$store.dispatch('sessions/stopSession')"><v-icon>mdi-clock-out</v-icon> End session</v-btn>
         Stop a session and (optionally) send the email inmediately
       </v-tooltip>
       <v-tooltip top>
         <v-btn slot="activator" color="primary" class="white--text" @click="customSessions"><v-icon>mdi-clock</v-icon> Custom sessions</v-btn>
-        Enter the session information manyllay and (optionally) the email inmediately
+        Enter the session information manually and send inmediately an email
       </v-tooltip>
       <v-flex>
         {{ sessionText }}
@@ -29,6 +29,7 @@ import EditDataDialog from './EditDataDialog.vue'
 import { mapState } from 'vuex'
 import Config from '@/lib/config'
 import moment from 'moment'
+import Console from '@/lib/Console'
 
 /** Get information about today's sessions.
 * @param {Array} activeSessions - The activeSessions array in the Vuex module sessions state.
@@ -84,6 +85,18 @@ export default {
         return `Sessions: ${this.sessions}. Total ${this.duration} hours.`
       }
     },
+
+    /** Returns the last session action, or undefined if there is not any session.
+    * @returns Either "start", "stop" or undefined
+    */
+    lastSessionAction() {
+      if(!this.sessions) {
+        return undefined
+      }
+      Console.log(this.activeSessions[this.activeSessions.length - 1].action)
+      return this.activeSessions[this.activeSessions.length - 1].action
+    },
+
     ...mapState('sessions', ['activeSessions'])
   },
 
@@ -99,7 +112,8 @@ export default {
 
   beforeDestroy() {
     if(this.interval) {
-      this.clearInterval(this.interval)
+      clearInterval(this.interval)
+      this.interval = undefined
     }
   },
 
