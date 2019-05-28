@@ -1,5 +1,7 @@
 <template>
-  <svg ref="mygantt"></svg>
+  <div :height="height">
+    <svg ref="mygantt"></svg>
+  </div>
 </template>
 
 <script>
@@ -41,6 +43,7 @@ function taskHTML(task) {
 * The Gantt diagram dependes on the gitlab vuex module, but does not use its methods.
 * @module components/ProjectGantt
 * @vue-prop {String} projectId - The identifier of the project to show.
+* @vue-prop {String} [height=800px] - The heigth of the Gantt diagram
 * @vue-computed {String} privateToken - store.gitlab.privateToken
 * @vue-computed {String} gitlab - store.gitlab.gitlab
 */
@@ -49,7 +52,12 @@ export default {
     projectId: {
       mandatory: true,
       type: Number
-    }
+    },
+    height: {
+      mandatory: false,
+      type: String,
+      default: () => "800px"
+    },
   },
 
   computed: {

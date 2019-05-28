@@ -1,6 +1,6 @@
 {
   "name": "gitlab-reporter",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -42,7 +42,9 @@
       "plugin:vue/essential",
       "eslint:recommended"
     ],
-    "rules": {},
+    "rules": {
+        "no-unused-vars": ["error", { "varsIgnorePattern": "[iI]gnored|Console" }]
+    },
     "parserOptions": {
       "parser": "babel-eslint"
     }

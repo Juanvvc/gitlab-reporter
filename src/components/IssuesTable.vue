@@ -11,6 +11,7 @@
         <tr>
           <td><a :href="props.item.project_url" target="_blank">{{ props.item.project_name }}</a></td>
           <td><a :href="props.item.web_url" target="_blank">{{ props.item.title }}</a></td>
+          <td class="hidden-sm-and-down"><status-tag :issue="props.item" /></td>
           <td class="hidden-sm-and-down">{{ props.item.due_date }}</td>
           <td class="hidden-sm-and-down">{{ props.item.assignee_names }}</td>
           <td class="hidden-sm-and-down">{{ props.item.time_stats.human_time_estimate }}</td>
@@ -40,13 +41,15 @@
 * Shows a table with information about issues
 */
 
-import EditDataDialog from './EditDataDialog.vue'
+import EditDataDialog from '@/components/EditDataDialog.vue'
+import StatusTag from '@/components/StatusTag.vue'
 import { mapState } from 'vuex'
 
 
 export default {
   components: {
-    EditDataDialog
+    EditDataDialog,
+    StatusTag
   },
 
   data () {
@@ -54,6 +57,7 @@ export default {
       headers: [
           { text: 'Project', value: 'project_name', sortable: true },
           { text: 'Title', value: 'title', sortable: true},
+          { text: 'Status', value: 'status', sortable: true, class: 'hidden-sm-and-down'},
           { text: 'Due date', value: 'due_date', sortable: true, class: 'hidden-sm-and-down'},
           { text: 'Assignees', value: 'assignees', sortable: false, class: 'hidden-sm-and-down' },
           { text: 'Estimated', value: 'estimated', sortable: false, class: 'hidden-sm-and-down' },

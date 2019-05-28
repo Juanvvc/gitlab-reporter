@@ -93,7 +93,6 @@ export default {
       if(!this.sessions) {
         return undefined
       }
-      Console.log(this.activeSessions[this.activeSessions.length - 1].action)
       return this.activeSessions[this.activeSessions.length - 1].action
     },
 

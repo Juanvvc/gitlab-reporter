@@ -236,7 +236,7 @@ const actions = {
   
   /** Get open issues and TODOs for the current user.
    * This action resets arrays issues, calendarEvents and processedMilestones. */
-  async getTasks ({commit, state, getters}) {
+  async getUserTasks ({commit, state, getters}) {
     if(!state.gitlab) {
       // commit('messages/message', {type: 'warning', message: 'The gitlab server is not configured'}, {root: true})
       return
@@ -249,6 +249,7 @@ const actions = {
     let calendar = {}
 
     commit('loading', true)
+    commit('issues', issues)
 
     if (state.loggedUser.is_admin) {
       // if the logged user is an admin, get issues for the current user with sudo parameter
@@ -290,7 +291,6 @@ const actions = {
       })
       addIssues(issues, newTodos)
 
-
       calendar = createCalendarEvents(issues)
     }
     commit('issues', issues)
@@ -300,7 +300,7 @@ const actions = {
 
   /** Get all issues for a project.
    * This action resets arrays issues, calendarEvents and processedMilestones. */
-  async getProjectTasks ({commit, state, getters}, {projectId}) {
+  async getProjectTasks ({commit, state, getters}, params) {
     if(!state.gitlab) {
       // commit('messages/message', {type: 'warning', message: 'The gitlab server is not configured'}, {root: true})
       return
@@ -312,13 +312,21 @@ const actions = {
     let issues = []
     let calendar = {}
 
+    if(params === undefined || params.projectId === undefined) {
+      // if no projectId is provided, reset the list
+      commit('issues', [])
+      commit('calendarEvents', [])
+      return
+    }
+
     commit('loading', true)
+    commit('issues', issues)
 
     let newTodos = await getRemoteTasks({
       gitlab: state.gitlab,
       privateToken: state.privateToken,
       params: {per_page: Config.PROJECTS_PER_PAGE},
-      url: `${getters.gitlabURL}/project/${projectId}/issues`,
+      url: `${getters.gitlabURL}/projects/${params.projectId}/issues`,
       commit
     })
     addIssues(issues, newTodos)

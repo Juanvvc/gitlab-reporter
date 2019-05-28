@@ -48,11 +48,12 @@
           color="primary"
           dark
           icons-and-text
-          centered >
+          centered
+          @change="tabChanged">
 
           <v-tab v-if="gitlabConfigured" href="#tab-reporter">Reporter<v-icon>mdi-account-clock</v-icon></v-tab>
           <v-tab v-if="gitlabConfigured" href="#tab-calendar">Calendar<v-icon>calendar_today</v-icon></v-tab>
-          <v-tab v-if="gitlabConfigured" href="#tab-gantt">Gantt<v-icon>mdi-file-tree</v-icon></v-tab>
+          <v-tab v-if="gitlabConfigured" href="#tab-project">Project<v-icon>mdi-file-tree</v-icon></v-tab>
           <v-tab href="#tab-config">Settings<v-icon>settings</v-icon></v-tab>
         </v-tabs>
 
@@ -101,11 +102,14 @@
           </v-tab-item>
 
           <!-- Gantt -->
-          <v-tab-item v-if="gitlabConfigured" value="tab-gantt">
-            <v-card flat height="800px">
-              <h2>Gantt</h2>
-              <search-project @change="selectedProjectId = arguments[0]"/>
-              <project-gantt :projectId="selectedProjectId" />
+          <v-tab-item v-if="gitlabConfigured" value="tab-project">
+          <v-card flat>
+              <v-card-text>
+                <h2>Project information</h2>
+                <search-project @change="changeSelectedProject(arguments[0])"/>
+                <issues-table />
+                <project-gantt :projectId="selectedProjectId" height="800px"/>
+              </v-card-text>
             </v-card>
           </v-tab-item>
 
@@ -137,6 +141,7 @@ import ConfigTab from '@/components/ConfigTab.vue'
 import MessageBar from '@/components/MessageBar.vue'
 import {CalendarView, CalendarViewHeader} from 'vue-simple-calendar'
 import Config from '@/lib/config.js'
+import Console from '@/lib/Console.js'
 import { mapState, mapGetters } from 'vuex'
 require("vue-simple-calendar/static/css/default.css")
 require("@mdi/font/css/materialdesignicons.min.css")
@@ -188,7 +193,6 @@ export default {
   mounted () {
     this.$store.dispatch('gitlab/login')
     this.$store.dispatch('gitlab/getUsers')
-    this.$store.dispatch('gitlab/getTasks')
 
     if(this.privateToken && this.gitlab) {
       this.activeTab = 'tab-reporter'
@@ -207,6 +211,24 @@ export default {
     changeUser(user) {
       this.$store.commit('gitlab/currentUser', user)
       this.$store.dispatch('gitlab/getTasks')
+    },
+
+    /** Change the currently selected project.
+    * @param {String} projectId - The identifier of the project to be selected.
+    */
+    changeSelectedProject(projectId) {
+      this.selectedProjectId = projectId
+      this.$store.dispatch('gitlab/getProjectTasks', {projectId: this.selectedProjectId})
+    },
+
+    /** The tab has changed.
+    * @param {Strong} newTab - The name of the tab to be shown */
+    tabChanged(newTab) {
+      if(newTab === 'tab-reporter') {
+        this.$store.dispatch('gitlab/getUserTasks')
+      } else if(newTab === 'tab-project') {
+        this.$store.dispatch('gitlab/getProjectTasks')
+      }
     }
   },
 
