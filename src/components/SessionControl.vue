@@ -3,11 +3,11 @@
     <v-layout row align-center justify-start wrap>
       <v-flex xs1 class="hidden-sm-and-down">Sessions:</v-flex>
       <v-tooltip top>
-         <v-btn  :disabled="lastSessionAction === 'start'" slot="activator" color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
+         <v-btn slot="activator" color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
         Start a session and (optionally) send the email inmediately
       </v-tooltip>
       <v-tooltip top>
-        <v-btn :disabled="lastSessionAction === 'stop'" slot="activator" color="red" class="white--text" @click="$store.dispatch('sessions/stopSession')"><v-icon>mdi-clock-out</v-icon> End session</v-btn>
+        <v-btn slot="activator" color="red" class="white--text" @click="$store.dispatch('sessions/stopSession')"><v-icon>mdi-clock-out</v-icon> End session</v-btn>
         Stop a session and (optionally) send the email inmediately
       </v-tooltip>
       <v-tooltip top>
