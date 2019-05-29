@@ -263,17 +263,11 @@ const actions = {
       calendar = createCalendarEvents(issues)
     } else {
       // if the logged user is not an admin, just get the default issues (i.e., his/her issues)
-      // assigned to me
-      //getRemoteTasks({action: 'assigned', state: 'pending', type: 'Issue'})
-      // mentions
-      //getRemoteTasks({action: 'mentioned', state: 'pending', type: 'Issue'})
-      // TODOs created by me.
-      // For some reason, if the todo was set as DONE but marked again, it won't appear with the other filters
-      //getRemoteTasks({action: 'marked', state: 'pending', type: 'Issue'})
-      // issues directly addressed.
-      // These are mentions in the first line of the description. For some reason, they are not classified as "mentioned" or "assigned"
-      //getRemoteTasks({action: 'directly_addressed', state: 'pending', type: 'Issue'})
-      // All the above are included in this call: pending TODOs
+      // assigned to me: {action: 'assigned', state: 'pending', type: 'Issue'})
+      // mentions: {action: 'mentioned', state: 'pending', type: 'Issue'})
+      // TODOs created by me: {action: 'marked', state: 'pending', type: 'Issue'})
+      // issues directly addressed: {action: 'directly_addressed', state: 'pending', type: 'Issue'})
+      // All the above are included in this call: pending TODOs.
       let newTodos = await getRemoteTasks({
         gitlab: state.gitlab,
         privateToken: state.privateToken,
@@ -369,7 +363,7 @@ const actions = {
 
         // report hours to gitlab, if active
         if(state.reportHours) {
-          let reportURL = `${getters.gitlabURL}/${issue.project_id}/issues/${issue.iid}/notes`
+          let reportURL = `${getters.gitlabURL}/projects/${issue.project_id}/issues/${issue.iid}/notes`
           try {
             await axios.post(reportURL, {body: spendTxt}, {headers: {'Private-Token': state.privateToken}})
           } catch {
