@@ -369,7 +369,7 @@ const actions = {
 
         // report hours to gitlab, if active
         if(state.reportHours) {
-          let reportURL = getters.gitlabURL + issue.project_id + '/issues/' + issue.iid + '/notes'
+          let reportURL = `${getters.gitlabURL}/${issue.project_id}/issues/${issue.iid}/notes`
           try {
             await axios.post(reportURL, {body: spendTxt}, {headers: {'Private-Token': state.privateToken}})
           } catch {
