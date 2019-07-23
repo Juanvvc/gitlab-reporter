@@ -70,6 +70,10 @@ export default {
     EditDataDialog
   },
 
+  props: {
+    currentDate: moment()
+  },
+
   data() {
     return {
       sessions: undefined,
@@ -124,11 +128,12 @@ export default {
         title: 'Custom sessions',
         fields: [
           {label: 'Sessions', name: 'sessions', value: todaySessions(this.activeSessions).sessions , type: 'textfield', hint: 'Example: 9:00-13:00,14:00-15:00'},
+          {label: 'Date', name: 'date', value:  moment(this.currentDate).format('YYYY-MM-DD'), type: 'textfield', hint: 'Example: 2019-08-31'}
         ]
       }
 
       let newMetadata = await this.$refs.editDataDialog.edit(params)
-      if(newMetadata && newMetadata.sessions) {
+      if(newMetadata) {
         this.$store.dispatch('sessions/customSessions', newMetadata)
         this.updateSessions()
       }

@@ -6,8 +6,8 @@
       <v-card-title><span class="headline">{{ title }}</span></v-card-title>
       <v-card-text>
         <div v-for="field in fields" :key="field.name">
-          <v-text-field :label="getLabel(field)" :hint="field.hint" v-model="field.value" v-if="field.type === 'textfield'"/>
-          <v-textarea :label="getLabel(field)" :hint="field.hint" v-model="field.value" v-if="field.type === 'textarea'"/>
+          <v-text-field :label="getLabel(field)" :hint="field.hint" v-model="field.value" v-if="field.type === 'textfield'" clearable/>
+          <v-textarea :label="getLabel(field)" :hint="field.hint" v-model="field.value" v-if="field.type === 'textarea'" clearable/>
           <!-- Use type 'hiden' for hiden values -->
         </div>
       </v-card-text>

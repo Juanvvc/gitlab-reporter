@@ -9,6 +9,7 @@ Shows a bar to manage the reporting controls:
 Events:
 
 - report-hours(date): date is a YYYY-MM-DD with the currently selected date.
+- change-date(date): date is a YYYY-MM-DD with the currently selected date.
 
 -->
 
@@ -36,7 +37,7 @@ Events:
             prepend-icon="event"
             readonly
           ></v-text-field>
-          <v-date-picker v-model="date" @input="$refs.dateMenu.save(date)" first-day-of-week="1"></v-date-picker>
+          <v-date-picker v-model="date" @input="changeDate(date)" first-day-of-week="1"></v-date-picker>
 
         </v-menu>
       </v-flex>
@@ -61,6 +62,7 @@ Events:
 
 import moment from 'moment'
 import { mapState } from 'vuex'
+import Console from '@/lib/Console'
 
 
 export default {
@@ -82,6 +84,13 @@ export default {
     },
 
     ...mapState('gitlab', ['issues'])
+  },
+
+  methods: {
+    changeDate(date) {
+      this.$refs.dateMenu.save(date)
+      this.$emit('change-date', {date})
+    }
   }
 }
 </script>

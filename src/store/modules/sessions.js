@@ -1,5 +1,6 @@
 import 'basil.js'
 import moment from 'moment'
+import Console from '@/lib/Console'
 
 const basil = new window.Basil({namespace: 'gitlab-reporter'});
 
@@ -75,11 +76,16 @@ const actions = {
    * @param {string} sessions - A string with start and end times of different sessions.
    *   For example: "09:00-13:00,14:00-18:00", "09:00-13:00,14:00-?", "09:00-13:00,14:00" (in this case, the last sessions is still open)
    */
-  async customSessions({commit, state}, {sessions}) {
+  async customSessions({commit, state}, {date, sessions}) {
 
     if(sessions !== '') {
-      let now = moment().format('YYYY-MM-DD')
-      let subject = encodeURIComponent(`${now} ${sessions}*`)
+      let dateStr;
+      if(!date) {
+        dateStr = moment().format('YYYY-MM-DD')
+      } else {
+        dateStr = moment(date).format('YYYY-MM-DD')
+      }
+      let subject = encodeURIComponent(`${dateStr} ${sessions}*`)
       if(!state.emailSessionTime) {
         commit('messages/message', {type: 'warning', message: 'Session emails is not set'}, {root: true})
       } else {
@@ -91,14 +97,14 @@ const actions = {
       let sessionsArray = []
       for(let s=0; s<sessionsInfo.length; s++) {
         let sessionInfo = sessionsInfo[s].split('-')
-        sessionsArray.push({date: now, time: sessionInfo[0], action: "start"})
+        sessionsArray.push({date: dateStr, time: sessionInfo[0], action: "start"})
         if(sessionInfo[1] !== undefined && sessionInfo[1] !== '?') {
-          sessionsArray.push({date: now, time: sessionInfo[1], action: "stop"})
+          sessionsArray.push({date: dateStr, time: sessionInfo[1], action: "stop"})
         }
       }
       commit('activeSessions', sessionsArray)
     } else {
-      // sessions are empty
+      // clean the sessions array
       commit('activeSessions', [])
     }
   },

@@ -41,7 +41,7 @@
           Comments can include <a href="https://docs.gitlab.com/ee/user/project/quick_actions.html">quick actions</a>, such as <em>/done</em> or <em>/close</em>. GitLab marks a task as done if a user comments on it. To prevent this, a <em>/todo</em> will be sent automatically after all comments, unless <em>/done</em> or <em>/close</em> is used.
         </p>
 
-        <session-control />
+        <session-control :current-date="currentDate" />
 
         <v-tabs
           v-model="activeTab"
@@ -75,7 +75,7 @@
 
                 <issues-table />
 
-                <report-bar @report-hours="$store.dispatch('gitlab/reportHours', $event)" />
+                <report-bar @report-hours="$store.dispatch('gitlab/reportHours', $event)" @change-date="currentDate=$event.date"/>
               </v-card-text>
             </v-card>
           </v-tab-item>
@@ -165,6 +165,7 @@ export default {
     return {
       activeTab: null,          // identifier of the currently selected tab
       calendarDate: new Date(), // the current date in the calendar
+      currentDate: new Date(),  // the current date in the report and sessions bar (changed in report bar)
       selectedProjectId: undefined // selected project id in the projects view
     }
   },
