@@ -5,29 +5,35 @@
       :headers="headers"
       :must-sort="true"
       :loading="loading"
-      hide-actions
+      hide-default-footer
+      disable-pagination
+      dense
     >
-      <template slot="items" slot-scope="props">
-        <tr>
-          <td><a :href="props.item.project_url" target="_blank">{{ props.item.project_name }}</a></td>
-          <td><a :href="props.item.web_url" target="_blank">{{ props.item.title }}</a></td>
-          <td class="hidden-sm-and-down"><status-tag :issue="props.item" /></td>
-          <td class="hidden-sm-and-down">{{ props.item.due_date }}</td>
-          <td class="hidden-sm-and-down">{{ props.item.assignee_names }}</td>
-          <td class="hidden-sm-and-down">{{ props.item.time_stats.human_time_estimate }}</td>
-          <td class="hidden-sm-and-down">{{ props.item.time_stats.human_total_time_spent }}</td>
-          <td>
-            <v-layout row align-center>
-              <v-tooltip bottom>
-                <v-btn slot="activator" icon @click="editReport(props.item)">
-                  <v-icon>mdi-progress-clock</v-icon>
-                </v-btn>
-                <span>Show a dialog to report tasks</span>
-              </v-tooltip>
-              <span>{{props.item.report_hours}}h</span>
-            </v-layout>
-          </td>
-        </tr>
+      <template v-slot:body="{ items }">
+        <tbody>
+          <tr v-for="item in items" :key="item.name">
+            <td><a :href="item.project_url" target="_blank">{{ item.project_name }}</a></td>
+            <td><a :href="item.web_url" target="_blank">{{ item.title }}</a></td>
+            <td class="hidden-sm-and-down"><status-tag :issue="item" /></td>
+            <td class="hidden-sm-and-down">{{ item.due_date }}</td>
+            <td class="hidden-sm-and-down">{{ item.assignee_names }}</td>
+            <td class="hidden-sm-and-down">{{ item.time_stats.human_time_estimate }}</td>
+            <td class="hidden-sm-and-down">{{ item.time_stats.human_total_time_spent }}</td>
+            <td>
+              <v-layout row align-center>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn v-on="on" icon @click="editReport(item)">
+                      <v-icon>mdi-progress-clock</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Show a dialog to report tasks</span>
+                </v-tooltip>
+                <span>{{item.report_hours}}h</span>
+              </v-layout>
+            </td>
+          </tr>
+        </tbody>
       </template>
     </v-data-table>
 
@@ -55,8 +61,8 @@ export default {
   data () {
     return {
       headers: [
-          { text: 'Project', value: 'project_name', sortable: true },
-          { text: 'Title', value: 'title', sortable: true},
+          { text: 'Project', value: 'project_name', sortable: true, width: "10%"},
+          { text: 'Title', value: 'title', sortable: true, width: "30%"},
           { text: 'Status', value: 'status', sortable: true, class: 'hidden-sm-and-down'},
           { text: 'Due date', value: 'due_date', sortable: true, class: 'hidden-sm-and-down'},
           { text: 'Assignees', value: 'assignees', sortable: false, class: 'hidden-sm-and-down' },

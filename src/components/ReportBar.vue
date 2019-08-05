@@ -24,19 +24,20 @@ Events:
           v-model="dateMenu"
           :nudge-right="40"
           :return-value.sync="date"
-          lazy
           transition="scale-transition"
           offset-y
           full-width
           min-width="290px"
         >
-          <v-text-field
-            slot="activator"
-            v-model="date"
-            label="Day to report"
-            prepend-icon="event"
-            readonly
-          ></v-text-field>
+          <template v-slot:activator="{ on }">
+            <v-text-field
+              v-on="on"
+              v-model="date"
+              label="Day to report"
+              prepend-icon="event"
+              readonly
+            ></v-text-field>
+          </template>
           <v-date-picker v-model="date" @input="changeDate(date)" first-day-of-week="1"></v-date-picker>
 
         </v-menu>

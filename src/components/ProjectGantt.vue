@@ -89,29 +89,31 @@ export default {
       let milestones = await this.downloadMilestones(projectId)
       // for each milestone, get the issues in this milestones
       Console.log(JSON.stringify(milestones))
-      for(let i = 0; i<milestones.length; i++) {
-        let issues = await this.downloadIssues(milestones[i]._id)
+      milestones.forEach(async milestone => {
+        const newMilestone = {...milestone}
+        newMilestone.progress = 0
+
+        const issues = await this.downloadIssues(newMilestone._id)
 
         // calculate the milestone issues as the ration of completed issues
         let current_progress = 0
-        let available_progress = issues.length
-        if(available_progress > 0) {
+        const num_issues = issues.length
+        if(num_issues > 0) {
           issues.forEach(issue => {
-            current_progress = current_progress + (issue.progress / 100)
-            if(issue.end > milestones[i].end) {
-              milestones[i].end = issue.end
+            const issue_progress = issue.progress / 100
+            current_progress = current_progress + issue_progress
+            if(issue.end > newMilestone.end) {
+              newMilestone.end = issue.end
             }
           })
-          milestones[i].progress = (current_progress / available_progress) * 100
-        } else {
-          milestones[i].progress = 0
+          newMilestone.progress = (current_progress / num_issues) * 100
         }
 
         // push the milestone to the task array (before the issues)
-        tasks.push(milestones[i])
+        tasks.push(newMilestone)
         // push all the issues to the task array (just after the milestone)
         issues.map(i => {tasks.push(i)})
-      }
+      })
 
       // create the gantt diagram in frappe-gantt and change to week mode
       // NOTE: "official" frappe-gantt does not have an "editable" configuration param
@@ -179,7 +181,7 @@ export default {
 </script>
 
 <style scoped>
-/deep/ .popup-wrapper {
+.popup-wrapper {
   background: #fff;
 }
 </style>

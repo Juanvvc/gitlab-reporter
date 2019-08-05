@@ -15,7 +15,7 @@ const state = {
   issues: [],
   calendarEvents: [],
   loggedUser: {name: 'UNAUTHENTICATED'},
-  currentUser: {name: 'UNAUTHENTICATED'},
+  currentUser: {name: 'UNAUTHENTICATED'},   // the user who own the tasks. It might be different thatn loggedUser if loggedUser is an admin
   privateToken: null,
   gitlab: null,
   milestones: [],
@@ -119,7 +119,7 @@ async function getRemoteTasks ({gitlab, privateToken, params, url, commit}) {
   if(mytodos) {
     for(let i=0; i<mytodos.data.length; i++) {
       // TODOs API use target property for issues. ISSUES API includes the issue directly
-      let issue = (mytodos.data[i].hasOwnProperty('target') ? mytodos.data[i].target : mytodos.data[i])
+      let issue = ('target' in mytodos.data[i] ? mytodos.data[i].target : mytodos.data[i])
 
       // build assignee names
       issue.assignee_names = issue.assignees.map( a => a.name ).join()
@@ -256,7 +256,16 @@ const actions = {
       let newTodos = await getRemoteTasks({
         gitlab: state.gitlab,
         privateToken: state.privateToken,
-        params: {state: 'pending', type: 'Issue', sudo: state.currentUser.username, per_page: Config.PROJECTS_PER_PAGE}
+        params: {state: 'pending', type: 'Issue', sudo: state.currentUser.id, per_page: Config.PROJECTS_PER_PAGE}
+      })
+      addIssues(issues, newTodos)
+      // not TODOs, but issues assinged to me. Sometimes these issues are not TODOs!
+      newTodos = await getRemoteTasks({
+        gitlab: state.gitlab,
+        privateToken: state.privateToken,
+        params: {scope: Config.ASSIGNED_TO_ME, state: 'opened', sudo: state.currentUser.id, per_page: Config.PROJECTS_PER_PAGE},
+        url: `${getters.gitlabURL}/issues`,
+        commit
       })
       addIssues(issues, newTodos)
 

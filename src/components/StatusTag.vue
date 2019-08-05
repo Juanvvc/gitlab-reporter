@@ -42,14 +42,15 @@ export default {
         } else if(daysDiff > 0) {
           return 'error'
         }
-        return ''
       }
+      return ''
     },
 
     text() {
       if(this.issue) {
         return this.issue.state
       }
+      return ''
     }
   }
 }

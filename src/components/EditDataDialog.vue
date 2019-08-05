@@ -12,9 +12,9 @@
         </div>
       </v-card-text>
       <v-card-actions>
+        <v-btn color="secondary" text @click.native="close(false)">{{ cancel }}</v-btn>
         <v-spacer />
-        <v-btn color="secondary" flat @click.native="close(false)">{{ cancel }}</v-btn>
-        <v-btn color="primary" flat @click.native="close(true)">{{ save }}</v-btn>
+        <v-btn color="primary" text @click.native="close(true)">{{ save }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

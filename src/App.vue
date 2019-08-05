@@ -2,41 +2,39 @@
 
 <template>
   <v-app>
+    <v-app-bar app dark color="primary darken-2">
+      <v-toolbar-title>
+        <v-layout column>
+        <span>
+          <v-layout row align-center>
+            &nbsp;&nbsp;&nbsp;&nbsp;GitLab reporter for:&nbsp;&nbsp;
+            <span v-if="loggedUser.is_admin">
+              <v-select
+                :items="users"
+                v-model="selectedUser"
+                item-text="name"
+                item-value="id"
+                @change="changeUser"
+                outlined
+                dense
+              ></v-select>
+            </span>
+            <span v-else>
+              {{ currentUser.name }}
+            </span>
+          </v-layout>
+        </span>
+        <span v-if="!loggedUser.is_admin" class="caption">
+            Server: <strong>{{ gitlab }}</strong>.
+            Clocking email: <strong>{{ emailSessionTime }}</strong>.
+            Reporting email: <strong>{{ emailReportHours }}</strong>.
+            Report to GitLab: <strong>{{ reportHours }}</strong>.
+          </span>
+        </v-layout>
+      </v-toolbar-title>
+    </v-app-bar>
     <v-content>
       <v-container>
-        <v-toolbar app dark color="primary darken-2">
-          <v-toolbar-title>
-            <v-layout column>
-              <v-layout row align-center>
-                GitLab reporter for:&nbsp;&nbsp;
-                <span v-if="loggedUser.is_admin">
-                  <v-select
-                    :items="users"
-                    v-model="currentUser"
-                    @change="changeUser"
-                  >
-                    <template slot="item" slot-scope="prop">
-                      {{ prop.item.name }}
-                    </template>
-                    <template slot="selection" slot-scope="prop">
-                      {{ prop.item.name }}
-                    </template>
-                  </v-select>
-                </span>
-                <span v-else>
-                  {{ currentUser.name }}
-                </span>
-              </v-layout>
-              <span class="caption">
-                Server: <strong>{{ gitlab }}</strong>.
-                Clocking email: <strong>{{ emailSessionTime }}</strong>.
-                Reporting email: <strong>{{ emailReportHours }}</strong>.
-                Report to GitLab: <strong>{{ reportHours }}</strong>.
-              </span>
-            </v-layout>
-          </v-toolbar-title>
-        </v-toolbar>
-
         <p  class="hidden-sm-and-down">
           Comments can include <a href="https://docs.gitlab.com/ee/user/project/quick_actions.html">quick actions</a>, such as <em>/done</em> or <em>/close</em>. GitLab marks a task as done if a user comments on it. To prevent this, a <em>/todo</em> will be sent automatically after all comments, unless <em>/done</em> or <em>/close</em> is used.
         </p>
@@ -45,8 +43,8 @@
 
         <v-tabs
           v-model="activeTab"
-          color="primary"
-          dark
+          background-color="primary"
+          class="elevation-2"
           icons-and-text
           centered
           @change="tabChanged">
@@ -65,7 +63,9 @@
                 <h2>Open issues and TODOs for {{ currentUser.name }}</h2>
 
                 <v-tooltip top>
-                  <p slot="activator">Number of tasks: {{ issues.length }}.</p>
+                  <template v-slot:activator="{ on }">
+                    <p v-on="on">Number of tasks: {{ issues.length }}.</p>
+                  </template>
                   <span>This list includes issues assigned to you and issues where you are mentioned.</span>
                 </v-tooltip>
 
@@ -166,6 +166,7 @@ export default {
       activeTab: null,          // identifier of the currently selected tab
       calendarDate: new Date(), // the current date in the calendar
       currentDate: new Date(),  // the current date in the report and sessions bar (changed in report bar)
+      selectedUser: '',
       selectedProjectId: undefined // selected project id in the projects view
     }
   },
@@ -208,10 +209,15 @@ export default {
       this.calendarDate = d;
     },
 
-    /** Change the current user */
-    changeUser(user) {
+    /** Change the currently selected userid */
+    changeUser(userid) {
+      let filtered_users = this.users.filter(u => u.id == userid)
+      if(filtered_users.length === 0) {
+        return
+      }
+      let user = filtered_users[0]
       this.$store.commit('gitlab/currentUser', user)
-      this.$store.dispatch('gitlab/getTasks')
+      this.$store.dispatch('gitlab/getUserTasks')
     },
 
     /** Change the currently selected project.
