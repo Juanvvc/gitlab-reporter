@@ -4,33 +4,33 @@
   <v-app>
     <v-app-bar app dark color="primary darken-2">
       <v-toolbar-title>
-        <v-layout column>
-        <span>
-          <v-layout row align-center>
-            &nbsp;&nbsp;&nbsp;&nbsp;GitLab reporter for:&nbsp;&nbsp;
-            <span v-if="loggedUser.is_admin">
-              <v-select
-                :items="users"
-                v-model="selectedUser"
-                item-text="name"
-                item-value="id"
-                @change="changeUser"
-                outlined
-                dense
-              ></v-select>
-            </span>
-            <span v-else>
-              {{ currentUser.name }}
-            </span>
-          </v-layout>
-        </span>
-        <span v-if="!loggedUser.is_admin" class="caption">
+        <v-column>
+          <span>
+            <v-row  align="center">
+              &nbsp;&nbsp;&nbsp;&nbsp;GitLab reporter for:&nbsp;&nbsp;
+              <span v-if="loggedUser.is_admin">
+                <v-select
+                  :items="users"
+                  v-model="selectedUser"
+                  item-text="name"
+                  item-value="id"
+                  @change="changeUser"
+                  outlined
+                  dense
+                ></v-select>
+              </span>
+              <span v-else>
+                {{ currentUser.name }}
+              </span>
+            </v-row>
+          </span>
+          <span v-if="!loggedUser.is_admin" class="caption">
             Server: <strong>{{ gitlab }}</strong>.
             Clocking email: <strong>{{ emailSessionTime }}</strong>.
             Reporting email: <strong>{{ emailReportHours }}</strong>.
             Report to GitLab: <strong>{{ reportHours }}</strong>.
           </span>
-        </v-layout>
+        </v-column>
       </v-toolbar-title>
     </v-app-bar>
     <v-content>

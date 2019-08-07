@@ -28,6 +28,7 @@
     "deepmerge": "^4.0.0",
     "eslint": "^6.1.0",
     "eslint-plugin-vue": "^5.2.3",
+    "eslint-plugin-vuetify": "^1.0.0-beta.3",
     "fibers": "^4.0.1",
     "jsdoc": "^3.6.2",
     "jsdoc-vuejs": "^3.0.2",
@@ -44,20 +45,26 @@
     "env": {
       "node": true
     },
+    "plugins": [
+      "vuetify"
+    ],
     "extends": [
       "plugin:vue/essential",
       "eslint:recommended"
     ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
     "rules": {
       "no-unused-vars": [
         "error",
         {
-          "varsIgnorePattern": "[iI]gnored|Console"
+          "varsIgnorePattern": "Console|[iI]gnored"
         }
-      ]
-    },
-    "parserOptions": {
-      "parser": "babel-eslint"
+      ],
+      "vuetify/no-deprecated-classes": "error",
+      "vuetify/grid-unknown-attributes": "error",
+      "vuetify/no-legacy-grid": "error"
     }
   },
   "postcss": {

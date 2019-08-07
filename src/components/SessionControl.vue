@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
-    <v-layout row align-center justify-start wrap>
-      <v-flex xs1 class="hidden-sm-and-down">Sessions:</v-flex>
+    <v-row  align="center" justify="start" >
+      <v-col cols="1" class="hidden-sm-and-down">Sessions:</v-col>
       <v-tooltip top>
         <template v-slot:activator="{ on }">
          <v-btn v-on="on" text color="green" class="white--text" @click="$store.dispatch('sessions/startSession')"><v-icon>mdi-clock-in</v-icon> Start session</v-btn>
@@ -21,10 +21,10 @@
         <span>Enter the session information manually and send inmediately an email</span>
       </v-tooltip>
       <v-spacer />
-      <v-flex>
+      <v-col>
         {{ sessionText }}
-      </v-flex>
-    </v-layout>
+      </v-col>
+    </v-row>
 
     <edit-data-dialog ref="editDataDialog" save="Send"/>
   </v-container>

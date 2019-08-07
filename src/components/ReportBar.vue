@@ -14,10 +14,10 @@ Events:
 -->
 
 <template>
-  <v-layout column>
-    <v-layout row wrap align-center>
+  <v-column>
+    <v-row   align="center">
       <v-spacer></v-spacer>
-      <v-flex xs12 sm6 md4>
+      <v-col cols="12" sm="6" md="4">
         <v-menu
           ref="dateMenu"
           :close-on-content-click="false"
@@ -41,22 +41,22 @@ Events:
           <v-date-picker v-model="date" @input="changeDate(date)" first-day-of-week="1"></v-date-picker>
 
         </v-menu>
-      </v-flex>
+      </v-col>
       <v-spacer></v-spacer>
-      <v-flex>
+      <v-col>
         Total hours to report: <strong>{{ Number(totalHoursToReport).toFixed(2) }}</strong>.
-      </v-flex>
+      </v-col>
       <v-spacer></v-spacer>
-      <v-flex>
+      <v-col>
         <v-btn
             @click.native="$emit('report-hours', {date})"
             color="primary"
             dark >
             Report
         </v-btn>
-      </v-flex>
-    </v-layout>
-  </v-layout>
+      </v-col>
+    </v-row>
+  </v-column>
 </template>
 
 <script>
