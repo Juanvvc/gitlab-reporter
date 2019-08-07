@@ -50,9 +50,9 @@
           @change="tabChanged">
 
           <v-tab v-if="gitlabConfigured" href="#tab-reporter">Reporter<v-icon>mdi-account-clock</v-icon></v-tab>
-          <v-tab v-if="gitlabConfigured" href="#tab-calendar">Calendar<v-icon>calendar_today</v-icon></v-tab>
+          <v-tab v-if="gitlabConfigured" href="#tab-calendar">Calendar<v-icon>mdi-calendar-blank</v-icon></v-tab>
           <v-tab v-if="gitlabConfigured" href="#tab-project">Project<v-icon>mdi-file-tree</v-icon></v-tab>
-          <v-tab href="#tab-config">Settings<v-icon>settings</v-icon></v-tab>
+          <v-tab href="#tab-config">Settings<v-icon>mdi-settings</v-icon></v-tab>
         </v-tabs>
 
         <v-tabs-items v-model="activeTab" >

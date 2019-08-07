@@ -34,7 +34,7 @@ Events:
               v-on="on"
               v-model="date"
               label="Day to report"
-              prepend-icon="event"
+              prepend-icon="mdi-calendar-blank"
               readonly
             ></v-text-field>
           </template>
