@@ -125,9 +125,12 @@ async function getRemoteTasks ({gitlab, privateToken, params, url, commit}) {
       issue.assignee_names = issue.assignees.map( a => a.name ).join()
 
       // get project name
+      // Example web_url:
+      // - https://gitlab.incide.es/DFIR/101729-quevedo/issues/11
+      // - https://gitlab.incide.es/DFIR/lab/101729-quevedo/issues/11
       let url_tokens = issue.web_url.split('/')
-      issue.project_name = url_tokens[4]
-      issue.project_namespace = `${url_tokens[3]}/${url_tokens[4]}`
+      issue.project_name = url_tokens[url_tokens.length - 3]
+      issue.project_namespace = `${url_tokens[url_tokens.length - 4]}/${issue.project_name}`
       issue.project_url = `${gitlab}/${issue.project_namespace}`
 
       // timereported

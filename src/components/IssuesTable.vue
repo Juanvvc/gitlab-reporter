@@ -17,13 +17,17 @@
             <td class="hidden-sm-and-down"><status-tag :issue="item" /></td>
             <td class="hidden-sm-and-down">{{ item.due_date }}</td>
             <td class="hidden-sm-and-down">{{ item.assignee_names }}</td>
+            <td class="hidden-sm-and-down">
+              <!--v-chip small label class="compact-form" v-for="label in item.labels" :key="label">{{label}}</v-chip-->
+              <span class="small-text" v-for="label in item.labels" :key="label">{{label}}, </span>
+            </td>
             <td class="hidden-sm-and-down">{{ item.time_stats.human_time_estimate }}</td>
             <td class="hidden-sm-and-down">{{ item.time_stats.human_total_time_spent }}</td>
             <td>
               <v-layout row align-center>
                 <v-tooltip bottom>
                   <template v-slot:activator="{ on }">
-                    <v-btn v-on="on" icon @click="editReport(item)">
+                    <v-btn small text v-on="on" icon @click="editReport(item)">
                       <v-icon>mdi-progress-clock</v-icon>
                     </v-btn>
                   </template>
@@ -66,6 +70,7 @@ export default {
           { text: 'Status', value: 'status', sortable: true, class: 'hidden-sm-and-down'},
           { text: 'Due date', value: 'due_date', sortable: true, class: 'hidden-sm-and-down'},
           { text: 'Assignees', value: 'assignees', sortable: false, class: 'hidden-sm-and-down' },
+          { text: 'Labels', value: 'labels', sortable: false, class: 'hidden-sm-and-down' },
           { text: 'Estimated', value: 'estimated', sortable: false, class: 'hidden-sm-and-down' },
           { text: 'Spent', value: 'spent', sortable: false, class: 'hidden-sm-and-down' },
           { text: 'Today', value: 'report', sortable: false }
@@ -104,3 +109,10 @@ export default {
   }
 }
 </script>
+
+<style>
+.small-text {
+  font-size: 70%;
+  color: #888;
+}
+</style>
