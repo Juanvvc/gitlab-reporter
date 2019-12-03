@@ -134,7 +134,7 @@ export default {
       let params = {
         title: 'Custom sessions',
         fields: [
-          {label: 'Sessions', name: 'sessions', value: todaySessions(this.activeSessions).sessions , type: 'textfield', hint: 'Example: 9:00-13:00,14:00-15:00'},
+          {label: 'Sessions', name: 'sessions', value: todaySessions(this.activeSessions).sessions , type: 'textfield', hint: 'Example: 09:00-13:00,14:00-15:00'},
           {label: 'Date', name: 'date', value:  moment(this.currentDate).format('YYYY-MM-DD'), type: 'textfield', hint: 'Example: 2019-08-31'}
         ]
       }
