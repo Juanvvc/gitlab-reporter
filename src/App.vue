@@ -4,7 +4,7 @@
   <v-app>
     <v-app-bar app dark color="primary darken-2">
       <v-toolbar-title>
-        <v-column>
+        <v-col>
           <span>
             <v-row  align="center">
               &nbsp;&nbsp;&nbsp;&nbsp;GitLab reporter for:&nbsp;&nbsp;
@@ -30,7 +30,7 @@
             Reporting email: <strong>{{ emailReportHours }}</strong>.
             Report to GitLab: <strong>{{ reportHours }}</strong>.
           </span>
-        </v-column>
+        </v-col>
       </v-toolbar-title>
     </v-app-bar>
     <v-content>

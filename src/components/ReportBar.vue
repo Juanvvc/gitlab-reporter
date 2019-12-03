@@ -14,7 +14,7 @@ Events:
 -->
 
 <template>
-  <v-column>
+  <v-col>
     <v-row   align="center">
       <v-spacer></v-spacer>
       <v-col cols="12" sm="6" md="4">
@@ -26,7 +26,6 @@ Events:
           :return-value.sync="date"
           transition="scale-transition"
           offset-y
-          full-width
           min-width="290px"
         >
           <template v-slot:activator="{ on }">
@@ -56,7 +55,7 @@ Events:
         </v-btn>
       </v-col>
     </v-row>
-  </v-column>
+  </v-col>
 </template>
 
 <script>

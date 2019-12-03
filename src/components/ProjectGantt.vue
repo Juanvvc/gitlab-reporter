@@ -88,12 +88,11 @@ export default {
       // get the project milestones
       let milestones = await this.downloadMilestones(projectId)
       // for each milestone, get the issues in this milestones
-      Console.log(JSON.stringify(milestones))
       milestones.forEach(async milestone => {
         const newMilestone = {...milestone}
         newMilestone.progress = 0
 
-        const issues = await this.downloadIssues(newMilestone._id)
+        const issues = await this.downloadIssues(milestone._id)
 
         // calculate the milestone issues as the ration of completed issues
         let current_progress = 0
