@@ -11,12 +11,13 @@
     >
       <template v-slot:body="{ items }">
         <tbody>
-          <tr v-for="item in items" :key="item.name">
+          <tr v-for="(item, index) in items" :key="item.name">
             <td><a :href="item.project_url" target="_blank">{{ item.project_name }}</a></td>
             <td><a :href="item.web_url" target="_blank">{{ item.title }}</a></td>
             <td class="hidden-sm-and-down"><status-tag :issue="item" /></td>
             <td class="hidden-sm-and-down">
-              <ncd-label v-for="label in item.labels" :key="label" :label="label" />
+              <!--ncd-label v-for="label in item.labels" :key="label" :label="label" /-->
+              <tag-editor :data-index="index" :tags="item.labels" @update-tags="updateTags" />
             </td>
             <td class="hidden-sm-and-down">{{ item.due_date }}</td>
             <td class="hidden-sm-and-down">{{ item.assignee_names }}</td>
@@ -50,17 +51,18 @@
 * Shows a table with information about issues
 */
 
-import EditDataDialog from '@/components/EditDataDialog.vue'
-import StatusTag from '@/components/StatusTag.vue'
-import NCDLabel from '@/components/NCDLabel.vue'
-import { mapState } from 'vuex'
+import EditDataDialog from '@/components/EditDataDialog.vue';
+import StatusTag from '@/components/StatusTag.vue';
+import TagEditor from '@/components/TagEditor.vue';
+import { mapState } from 'vuex';
+import Console from '@/lib/Console.js';
 
 
 export default {
   components: {
     EditDataDialog,
     StatusTag,
-    'ncd-label': NCDLabel
+    TagEditor
   },
 
   data () {
@@ -106,6 +108,12 @@ export default {
       if(newMetadata) {
         this.$store.commit('gitlab/editIssue', {issueIndex, newMetadata})
       }
+    },
+
+    updateTags({dataIndex, tags}) {
+      let newMetadata = {tags: tags}
+      this.$store.commit('gitlab/editIssue', {issueIndex:dataIndex, newMetadata})
+      this.$store.dispatch('gitlab/changeLabels', {issueIndex:dataIndex})
     }
   }
 }

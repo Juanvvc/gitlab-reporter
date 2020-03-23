@@ -34,7 +34,7 @@
       </v-toolbar-title>
     </v-app-bar>
     <v-content>
-      <v-container>
+      <v-container fluid>
         <p  class="hidden-sm-and-down">
           Comments can include <a href="https://docs.gitlab.com/ee/user/project/quick_actions.html">quick actions</a>, such as <em>/done</em> or <em>/close</em>. GitLab marks a task as done if a user comments on it. To prevent this, a <em>/todo</em> will be sent automatically after all comments, unless <em>/done</em> or <em>/close</em> is used.
         </p>

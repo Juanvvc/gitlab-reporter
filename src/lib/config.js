@@ -10,5 +10,11 @@ export default {
      */
     ASSIGNED_TO_ME: 'assigned-to-me',
     /** Update the session duration after these milliseconds */
-    UPDATE_DURATION: 30000
+    UPDATE_DURATION: 30000,
+    /** List of important labels */
+    IMPORTANT_LABELS: ["important", "relevant", "prioridad alta"],
+    /** List of things-to-check labels */
+    CHECK_LABELS: ["check", "warning"],
+    /** list of already-seen labels */
+    SEEN_LABELS: ["seen", "unimportant", "doing"],
 }

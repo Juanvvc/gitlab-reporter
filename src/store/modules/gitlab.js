@@ -413,6 +413,18 @@ const actions = {
     }
   },
 
+  /** Change labels */
+  async changeLabels ({state, getters}, {issueIndex}) {
+    let issue = state.issues[issueIndex];
+    let tags = issue.tags.join(',');
+    let reportURL = `${getters.gitlabURL}/projects/${issue.project_id}/issues/${issue.iid}`;
+    try {
+      await axios.put(reportURL, {labels: tags}, {headers: {'Private-Token': state.privateToken}})
+    } catch {
+      // ignore errors
+    }
+  },
+
   /** A global action to load state from basil */
   loadState: {
     root: true,
