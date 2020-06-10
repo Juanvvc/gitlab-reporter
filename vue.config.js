@@ -1,6 +1,9 @@
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 process.env.VUE_APP_VERSION = require('./package.json').version
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
 
 module.exports = {
   // options...

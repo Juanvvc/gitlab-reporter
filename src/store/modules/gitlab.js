@@ -124,13 +124,12 @@ async function getRemoteTasks ({gitlab, privateToken, params, url, commit}) {
       // build assignee names
       issue.assignee_names = issue.assignees.map( a => a.name ).join()
 
-      // get project name
+      // get project name. We cannot use issue.project, because TODOs don't include the name of the project
       // Example web_url:
-      // - https://gitlab.incide.es/DFIR/101729-quevedo/issues/11
-      // - https://gitlab.incide.es/DFIR/lab/101729-quevedo/issues/11
+      // - https://gitlab.incide.es/Interno/infraestructura/-/issues/79
       let url_tokens = issue.web_url.split('/')
-      issue.project_name = url_tokens[url_tokens.length - 3]
-      issue.project_namespace = `${url_tokens[url_tokens.length - 4]}/${issue.project_name}`
+      issue.project_name = url_tokens[url_tokens.length - 4]
+      issue.project_namespace = `${url_tokens[url_tokens.length - 5]}/${issue.project_name}`
       issue.project_url = `${gitlab}/${issue.project_namespace}`
 
       // timereported
@@ -350,7 +349,8 @@ const actions = {
       let issue = state.issues[i]
       let hoursToReport = parseFloat(issue.report_hours)
       let commentToReport = issue.report_comment
-      if(!isNaN(hoursToReport) && hoursToReport > 0) {
+      // if hoursToReport is a number (either positive or negative)...
+      if(!isNaN(hoursToReport) && Math.abs(hoursToReport) > 0) {
         // create the report message
         let spendTxt='/spend ' + hoursToReport + 'h ' + date
         // this will the appended to the mail body
@@ -402,7 +402,7 @@ const actions = {
     }
 
     /** report to an email */
-    if(state.emailReportHours) {
+    if(state.emailReportHours && reportBody.length > 0) {
       let subject = encodeURIComponent(`${date} hours to report`)
       let body = encodeURIComponent(JSON.stringify(reportBody, null, 4))
       if(body) {
@@ -410,6 +410,9 @@ const actions = {
       } else {
         window.open(`mailto:${state.emailReportHours}?subject=${subject}`)
       }
+    } else {
+      let msgWarning = state.emailReportHours?'no issues to report':'no email defined'
+      commit('messages/message', {type: 'warning', message: `Not reporting hours to EMail: ${msgWarning}`}, {root: true})
     }
   },
 

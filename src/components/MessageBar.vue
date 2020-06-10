@@ -14,7 +14,7 @@
       {{ message }}
       <v-btn
         dark
-        flat
+        text
         @click="visible = false"
       >
         Close

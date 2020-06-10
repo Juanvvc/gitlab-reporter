@@ -1,6 +1,6 @@
 {
   "name": "gitlab-reporter",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -10,36 +10,36 @@
     "deploy": "yarn build ; node_modules/.bin/push-dir --dir=dist --branch=gh-pages --cleanup"
   },
   "dependencies": {
-    "@mdi/font": "^4.6.95",
+    "@mdi/font": "^5.3.45",
     "axios": "^0.19.0",
-    "basil.js": "^0.4.9",
+    "basil.js": "^0.4.11",
     "frappe-gantt": "https://github.com/Juanvvc/gantt.git",
-    "moment": "^2.22.2",
-    "vue": "^2.5.17",
-    "vue-simple-calendar": "^4.3.2",
-    "vuetify": "^2.1.12",
-    "vuex": "^3.1.2"
+    "moment": "^2.26.0",
+    "vue": "^2.6.11",
+    "vue-simple-calendar": "^4.4.0",
+    "vuetify": "^2.2.33",
+    "vuex": "^3.4.0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.1.1",
-    "@vue/cli-plugin-eslint": "^4.1.1",
-    "@vue/cli-service": "^4.1.1",
+    "@vue/cli-plugin-babel": "^4.4.1",
+    "@vue/cli-plugin-eslint": "^4.4.1",
+    "@vue/cli-service": "^4.4.1",
     "babel-eslint": "^10.0.3",
     "deepmerge": "^4.2.2",
-    "eslint": "^6.7.2",
+    "eslint": "^7.2.0",
     "eslint-plugin-vue": "^6.0.1",
     "eslint-plugin-vuetify": "^1.0.0-beta.5",
-    "fibers": "^4.0.2",
-    "jsdoc": "^3.6.2",
+    "fibers": "^5.0.0",
+    "jsdoc": "^3.6.4",
     "jsdoc-vuejs": "^3.0.5",
     "minami": "^1.2.3",
     "push-dir": "^0.4.1",
-    "sass": "^1.23.7",
+    "sass": "^1.26.8",
     "sass-loader": "^8.0.0",
     "vue-cli-plugin-vuetify": "^2.0.2",
-    "vue-template-compiler": "^2.5.17",
-    "vuetify-loader": "^1.4.2",
-    "webpack-bundle-analyzer": "^3.6.0"
+    "vue-template-compiler": "^2.6.11",
+    "vuetify-loader": "^1.4.4",
+    "webpack-bundle-analyzer": "^3.8.0"
   },
   "eslintConfig": {
     "root": true,
