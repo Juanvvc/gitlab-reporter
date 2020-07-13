@@ -94,7 +94,7 @@ export default {
 
         const issues = await this.downloadIssues(milestone._id)
 
-        // calculate the milestone issues as the ration of completed issues
+        // calculate the milestone issues as the ratio of completed issues
         let current_progress = 0
         const num_issues = issues.length
         if(num_issues > 0) {
@@ -111,7 +111,7 @@ export default {
         // push the milestone to the task array (before the issues)
         tasks.push(newMilestone)
         // push all the issues to the task array (just after the milestone)
-        issues.map(i => {tasks.push(i)})
+        // issues.map(i => {tasks.push(i)})
       })
 
       // create the gantt diagram in frappe-gantt and change to week mode
@@ -120,6 +120,7 @@ export default {
         editable: false,
         custom_popup_html: taskHTML
       })
+      Console.log(tasks)
       gantt.change_view_mode('Week')
     },
 

@@ -19,11 +19,11 @@ module.exports = {
 
   configureWebpack: {
 //    plugins: [new BundleAnalyzerPlugin()],
-    resolve: {
-      alias: {
-        // do not include locales in moment to save space
-        moment: 'moment/src/moment'
-      }
-    }
+    // resolve: {
+    //   alias: {
+    //     // do not include locales in moment to save space
+    //     moment: 'moment/src/moment'
+    //   }
+    // }
   }
 }

@@ -61,7 +61,7 @@ export default {
       // Lazy load input items
       this.isLoading = true
       try{
-        let res = await axios.get(`${this.gitlabURL}/projects`, {params: {'simple': 'true', 'archived': 'true', 'order_by': 'name', 'sort': 'asc', 'per_page': Config.PROJECTS_PER_PAGE, 'search': val}, headers: {'Private-Token': this.privateToken}})
+        let res = await axios.get(`${this.gitlabURL}/projects`, {params: {'simple': 'true', 'order_by': 'name', 'sort': 'asc', 'per_page': Config.PROJECTS_PER_PAGE, 'search': val}, headers: {'Private-Token': this.privateToken}})
         if(res) {
             this.projects = res.data.map(p => {return {name: p.name, id: p.id}})
         }

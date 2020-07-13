@@ -107,7 +107,7 @@
               <v-card-text>
                 <h2>Project information</h2>
                 <search-project @change="changeSelectedProject(arguments[0])"/>
-                <issues-table />
+                <issues-table showStats />
                 <project-gantt :projectId="selectedProjectId" height="800px"/>
               </v-card-text>
             </v-card>

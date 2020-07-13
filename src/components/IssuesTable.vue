@@ -15,6 +15,7 @@
             <td><a :href="item.project_url" target="_blank">{{ item.project_name }}</a></td>
             <td><a :href="item.web_url" target="_blank">{{ item.title }}</a></td>
             <td class="hidden-sm-and-down"><status-tag :issue="item" /></td>
+            <td class="hidden-sm-and-down">{{ (item.milestone?item.milestone.title:"") }}</td>
             <td class="hidden-sm-and-down">
               <!--ncd-label v-for="label in item.labels" :key="label" :label="label" /-->
               <tag-editor :data-index="index" :tags="item.labels" @update-tags="updateTags" />
@@ -41,6 +42,8 @@
       </template>
     </v-data-table>
 
+    <div v-if="showStats">Hours estimated: {{totalEstimated}}. Hours spent: {{totalSpent}}</div>
+
     <edit-data-dialog ref="editDataDialog" />
   </div>
 </template>
@@ -65,12 +68,21 @@ export default {
     TagEditor
   },
 
+  props: {
+    showStats: {
+      mandatory: false,
+      type: Boolean,
+      default: false
+    },
+  },
+
   data () {
     return {
       headers: [
           { text: 'Project', value: 'project_name', sortable: true, width: "10%"},
           { text: 'Title', value: 'title', sortable: true, width: "30%"},
           { text: 'Status', value: 'status', sortable: false, class: 'hidden-sm-and-down' },
+          { text: 'Milestone', value: 'milestone', sortable: false, class: 'hidden-sm-and-down' },
           { text: 'Labels', value: 'labels', sortable: false, class: 'hidden-sm-and-down' },
           { text: 'Due date', value: 'due_date', sortable: true, class: 'hidden-sm-and-down'},
           { text: 'Assignees', value: 'assignees', sortable: false, class: 'hidden-sm-and-down' },
@@ -83,6 +95,16 @@ export default {
   },
 
   computed: {
+    totalEstimated() {
+      let total = 0;
+      this.issues.forEach( issue => { total += issue.time_stats.time_estimate })
+      return total / (60 * 60)
+    },
+    totalSpent() {
+      let total = 0;
+      this.issues.forEach( issue => { total += issue.time_stats.total_time_spent })
+      return total / (60 * 60)
+    },
     ...mapState('gitlab', ['loading', 'issues'])
   },
 
