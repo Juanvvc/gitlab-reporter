@@ -24,7 +24,7 @@
               </span>
             </v-row>
           </span>
-          <span v-if="!loggedUser.is_admin" class="caption">
+          <span v-if="!loggedUser.is_admin" class="text-caption">
             Server: <strong>{{ gitlab }}</strong>.
             Clocking email: <strong>{{ emailSessionTime }}</strong>.
             Reporting email: <strong>{{ emailReportHours }}</strong>.
@@ -33,7 +33,7 @@
         </v-col>
       </v-toolbar-title>
     </v-app-bar>
-    <v-content>
+    <v-main>
       <v-container fluid>
         <p  class="hidden-sm-and-down">
           Comments can include <a href="https://docs.gitlab.com/ee/user/project/quick_actions.html">quick actions</a>, such as <em>/done</em> or <em>/close</em>. GitLab marks a task as done if a user comments on it. To prevent this, a <em>/todo</em> will be sent automatically after all comments, unless <em>/done</em> or <em>/close</em> is used.
@@ -126,7 +126,7 @@
         <v-spacer></v-spacer>
         <div>GitLab reporter v{{ app_version }}. &copy; Juan Vera, {{ new Date().getFullYear() }}</div>
       </v-footer>
-    </v-content>
+    </v-main>
   </v-app>
 </template>
 

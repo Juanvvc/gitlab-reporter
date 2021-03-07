@@ -3,7 +3,7 @@
 <template>
   <v-dialog v-model="visible" max-width="500px" persistent>
     <v-card>
-      <v-card-title><span class="headline">{{ title }}</span></v-card-title>
+      <v-card-title><span class="text-h5">{{ title }}</span></v-card-title>
       <v-card-text>
         <div v-for="field in fields" :key="field.name">
           <v-text-field :label="getLabel(field)" :hint="field.hint" v-model="field.value" v-if="field.type === 'textfield'" clearable/>
