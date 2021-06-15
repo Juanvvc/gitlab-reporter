@@ -18,7 +18,7 @@
     "moment": "^2.26.0",
     "vue": "^2.6.11",
     "vue-simple-calendar": "^4.4.0",
-    "vuetify": "2.4.5",
+    "vuetify": "2.5.3",
     "vuex": "^3.4.0"
   },
   "devDependencies": {
@@ -30,7 +30,6 @@
     "eslint": "^7.2.0",
     "eslint-plugin-vue": "^7.1.0",
     "eslint-plugin-vuetify": "^1.0.0-beta.5",
-    "fibers": "^5.0.0",
     "jsdoc": "^3.6.4",
     "jsdoc-vuejs": "^3.0.5",
     "minami": "^1.2.3",
@@ -67,9 +66,12 @@
       "vuetify/no-deprecated-classes": "error",
       "vuetify/grid-unknown-attributes": "error",
       "vuetify/no-legacy-grid": "error",
-      "vue/valid-v-slot": ["error", {
+      "vue/valid-v-slot": [
+        "error",
+        {
           "allowModifiers": true
-      }]
+        }
+      ]
     }
   },
   "postcss": {
